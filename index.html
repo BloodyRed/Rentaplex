@@ -180,6 +180,34 @@ table.cmp thead th{text-align:right}
 .ver summary{cursor:pointer;font-weight:500}
 .ver ul{margin:.5rem 0 0;padding-left:1.2rem}
 .ver li{margin-bottom:.25rem}
+.fold>summary{list-style:none;display:flex;align-items:center;gap:.75rem;cursor:pointer;padding:.15rem 0}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary h2,.fold>summary h3{margin:0}
+.fold-note{margin-left:auto;font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.chev{width:1.25rem;height:1.25rem;flex:none;color:var(--muted)}
+.fold[open]>summary .chev{transform:rotate(180deg)}
+.fold>summary:hover .chev{color:var(--ink)}
+.fold-body{padding-top:.6rem}
+.fold.sub{margin-top:1.4rem;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.6rem .9rem}
+.fold.sub>summary h3{font-size:.95rem;color:var(--ink)}
+.fold.sub .inp{background:var(--bg)}
+:root{interpolate-size:allow-keywords}
+@media (prefers-reduced-motion:no-preference){
+  .chev{transition:transform .2s}
+  .fold::details-content{block-size:0;overflow:hidden;transition:block-size .25s ease,content-visibility .25s allow-discrete}
+  .fold[open]::details-content{block-size:auto}
+}
+.split{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.split th,.split td{padding:.35rem 0 .35rem .6rem;text-align:right;font-weight:500}
+.split tbody th{text-align:left;color:var(--muted);font-weight:400;padding-left:0}
+.split thead th{font-size:.82rem;color:var(--muted)}
+.split tr.sum th,.split tr.sum td{border-top:1px solid var(--line);color:var(--ink);font-weight:600}
+.split-note{display:block;color:var(--muted);font-size:.8rem;margin-top:.6rem;line-height:1.4}
+#splitPanel[hidden]{display:none}
+.fold-check{display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;font-weight:500;padding:.25rem .65rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;flex:none;white-space:nowrap}
+.fold-check:hover{border-color:var(--ink)}
+.fold-check input{width:1rem;height:1rem;margin:0;accent-color:var(--steel);cursor:pointer}
+.fold.sub .fold-check{background:var(--bg)}
 .mbar{display:none}
 @media (max-width:920px){
   .layout{grid-template-columns:1fr}
@@ -256,9 +284,11 @@ table.cmp thead th{text-align:right}
         <div><span data-t="perYear"></span><strong id="vYear"></strong></div>
         <div><span data-t="cashReq"></span><strong id="vCash"></strong></div>
         <div><span data-t="coc"></span><strong id="vCoc"></strong></div>
+        <div id="vStabBox" hidden><span id="vStabL"></span><strong id="vStab"></strong></div>
       </div>
       <div class="warns" id="warns"></div>
     </div>
+    <div class="panel" id="splitPanel" hidden><h2 data-t="pSplit"></h2><div id="split"></div></div>
     <div class="panel"><h2 data-t="pOffer"></h2><dl class="kv" id="offer"></dl><div class="estimate" style="margin-top:.75rem"><button class="btn" type="button" id="useMax" data-t="useMax"></button></div></div>
     <div class="panel"><h2 data-t="pChecks"></h2><ul class="checks" id="checks"></ul></div>
     <div class="panel"><h2 data-t="pBar"></h2><div class="bar" id="bar"></div><div class="legend" id="legend"></div></div>
@@ -308,7 +338,7 @@ const STR={
  projLead:B("Selon vos hypothèses de hausse des loyers, des dépenses et de la valeur. Le taux d'intérêt est supposé constant; dans la réalité, il sera renégocié à chaque renouvellement.","Based on your assumptions for rent, expense and value growth. The interest rate is assumed constant; in reality it will be renegotiated at each renewal."),
  notesT:B("Hypothèses et limites","Assumptions and limits"),
  unitsTh:B(["Logement","Loyer / mois","J'y habite"],["Unit","Rent / month","I live here"]),
- pOffer:B("Votre offre","Your offer"), useMax:B("Offrir le prix maximal","Offer the highest price"),
+ include:B("Inclure","Include"), pSplit:B("Partage entre propriétaires","Split between owners"), pOffer:B("Votre offre","Your offer"), useMax:B("Offrir le prix maximal","Offer the highest price"),
  arch:B("Archiver","Archive"), archT:B("Archives","Archive"), archEmpty:B("Aucun immeuble archivé. L'icône d'archive sur un onglet le retire de la barre sans le supprimer. Pour supprimer un immeuble, archivez-le puis supprimez-le ici.","No archived buildings. The archive icon on a tab removes it from the bar without deleting it. To delete a building, archive it and then delete it here."),
  setT:B("Réglages","Settings"), setOpen:B("Ouvrir les réglages","Open settings"), close:B("Fermer","Close"), rename:B("Renommer","Rename"), renameHint:B("Double-cliquez pour renommer","Double-click to rename"), archLast:B("Gardez au moins un onglet actif","Keep at least one active tab"),
  restore:B("Restaurer","Restore"), purge:B("Supprimer définitivement","Delete permanently"),
@@ -324,6 +354,7 @@ const STR={
  cmpT:B("Comparer les immeubles","Compare buildings"), cmpLead:B("Cochez les onglets à comparer. Le meilleur résultat de chaque ligne est en vert.","Check the tabs to compare. The best result in each row is in green."),
  cmpEmpty:B("Cochez au moins deux onglets pour les comparer.","Check at least two tabs to compare them."),
  estBtn:B("Estimer la taxe de bienvenue","Estimate the welcome tax"),
+ futRent:B("Loyer futur / mois","Future rent / month"), futYear:B("Dès l'année","From year"),
  addUnit:B("Ajouter un logement","Add a unit"), unitName:B("Logement","Unit"), remove:B("Retirer","Remove"), yes:B("Oui","Yes"), no:B("Non","No")
 };
 const NOTES={
@@ -332,20 +363,22 @@ const NOTES={
   "Prime SCHL : barème standard (4,00 %, 3,10 %, 2,80 % du prêt selon la mise de fonds) appliqué seulement si vous habitez un des logements et que la mise de fonds est sous 20 %. Le prêteur et la SCHL peuvent exiger une mise de fonds minimale plus élevée selon le nombre de logements; confirmez avec votre courtier.",
   "Barème Montréal 2026 : 0,5 % jusqu'à 62 900 $, 1 % jusqu'à 315 000 $, 1,5 % jusqu'à 552 300 $, 2 % jusqu'à 1 104 700 $, 2,5 % jusqu'à 2 136 500 $, 3,5 % jusqu'à 3 113 000 $ et 4 % au-delà. Le bouton d'estimation utilise le prix d'achat comme base d'imposition quand vous n'avez pas l'évaluation municipale.",
   "Paiement hypothécaire : intérêt composé semestriellement, comme les prêts à taux fixe canadiens.",
-  "Impôt : seul le revenu de location est imposé à votre taux marginal. Le remboursement de capital n'est pas déductible, les intérêts le sont. La DPA (amortissement fiscal) ne peut pas créer de perte locative et elle est récupérée (imposée) à la revente. Si vous habitez un logement, les dépenses déductibles sont réparties au prorata du nombre de logements loués, et votre part est traitée comme résidence principale à la revente.",
+  "Impôt : par défaut, l'impôt de l'immeuble est la différence entre votre impôt fédéral et québécois avec et sans le revenu locatif, selon les barèmes 2026 (fédéral 14 %, 20,5 %, 26 %, 29 %, 33 % avec l'abattement du Québec de 16,5 %; Québec 14 %, 19 %, 24 %, 25,75 %). Vos crédits personnels, vos autres déductions et la réduction du montant personnel de base fédéral pour les revenus élevés ne sont pas pris en compte. Les barèmes doivent être mis à jour chaque année. Le remboursement de capital n'est pas déductible, les intérêts le sont. La DPA (amortissement fiscal) ne peut pas créer de perte locative et elle est récupérée (imposée) à la revente. Si vous habitez un logement, les dépenses déductibles sont réparties au prorata du nombre de logements loués, et votre part est traitée comme résidence principale à la revente.",
   "Gain en capital : taux d'inclusion de 50 % appliqué à la portion locative. Cet outil ne remplace pas l'avis d'un comptable, d'un courtier hypothécaire ou d'un notaire."],
  en:[
   "2026 land transfer duties (welcome tax): base brackets of 0.5% up to $62,900, 1% up to $315,000 and 1.5% above. Municipalities can set higher rates for brackets above $500,000; adjust the last rate for your city. The calculation uses the higher of the price and the municipal assessment, without the comparative factor.",
   "CMHC premium: standard schedule (4.00%, 3.10%, 2.80% of the loan depending on the down payment) applied only if you live in one of the units and the down payment is under 20%. The lender and CMHC may require a higher minimum down payment depending on the number of units; confirm with your broker.",
   "Montréal 2026 scale: 0.5% up to $62,900, 1% up to $315,000, 1.5% up to $552,300, 2% up to $1,104,700, 2.5% up to $2,136,500, 3.5% up to $3,113,000 and 4% above. The estimate button uses the purchase price as the tax base when you don't have the municipal assessment.",
   "Mortgage payment: interest compounded semi-annually, like Canadian fixed-rate mortgages.",
-  "Tax: only rental income is taxed, at your marginal rate. Principal repayment isn't deductible; interest is. CCA (capital cost allowance) can't create a rental loss and is recaptured (taxed) on sale. If you live in a unit, deductible expenses are prorated by the number of rented units, and your share is treated as a principal residence on sale.",
+  "Tax: by default, the building's tax is the difference between your federal and Québec tax with and without the rental income, using the 2026 brackets (federal 14%, 20.5%, 26%, 29%, 33% with the 16.5% Québec abatement; Québec 14%, 19%, 24%, 25.75%). Personal credits, other deductions and the federal basic personal amount reduction for high incomes aren't included. The brackets must be updated every year. Principal repayment isn't deductible; interest is. CCA (capital cost allowance) can't create a rental loss and is recaptured (taxed) on sale. If you live in a unit, deductible expenses are prorated by the number of rented units, and your share is treated as a principal residence on sale.",
   "Capital gains: 50% inclusion rate applied to the rental portion. This tool doesn't replace advice from an accountant, mortgage broker or notary."]
 };
 const SRC={fr:"Sources :",en:"Sources:"};
 const SRCL=[
  ["https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/finances/publications-adm/Bulletins/FR/BI_Explication_technique.pdf",B("Finances Québec, bulletin d'avril 2026","Finances Québec, April 2026 bulletin")],
  ["https://lac-tremblant-nord.qc.ca/wp-content/uploads/2026/04/Reglement-2026-05-Taux-de-droits-de-mutation-2.pdf",B("exemple de règlement municipal 2026 sur les tranches","sample 2026 municipal bylaw on the brackets")],
+ ["https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/retenues-paie/t4032-tables-retenues-paie/t4032qc-jan/t4032qc-janvier-information-generale.html",B("ARC, taux fédéraux 2026","CRA, 2026 federal rates")],
+ ["https://www.revenuquebec.ca/fr/citoyens/declaration-de-revenus/produire-votre-declaration-de-revenus/taux-dimposition/",B("Revenu Québec, taux 2026","Revenu Québec, 2026 rates")],
  ["https://montreal.ca/articles/comment-sont-calcules-les-droits-sur-les-mutations-immobilieres-9279",B("Ville de Montréal, droits de mutation 2026","City of Montréal, 2026 transfer duties")],
  ["https://cmhc-schl.gc.ca/professionnels/innovation-et-leadership-dans-le-secteur/expertise-de-lindustrie/la-ressource/assurance-pret-hypothecaire-et-primes",B("SCHL, primes d'assurance prêt hypothécaire","CMHC, mortgage loan insurance premiums")]
 ];
@@ -361,7 +394,7 @@ const SECTIONS = [
   {k:"reno",label:B("Rénovations au départ","Upfront renovations"),suf:"$",def:0,hint:B("Ajoutées au coût de l'immeuble.","Added to the building's cost.")},
   {k:"otherClose",label:B("Autres frais d'achat","Other closing costs"),suf:"$",def:0,hint:B("Ajustements de taxes, certificat de localisation, etc.","Tax adjustments, certificate of location, etc.")}
  ], sub:{title:B("Droits de mutation (taxe de bienvenue) 2026","Land transfer duties (welcome tax) 2026"), fields:[
-  {k:"includeWT",type:"check",label:B("Inclure la taxe de bienvenue dans le calcul","Include the welcome tax in the calculation"),def:true,hint:B("Décochez si vous en êtes exempté ou pour voir les résultats sans elle.","Uncheck if you're exempt or to see the results without it.")},
+  {k:"includeWT",inHead:true,type:"check",label:B("Inclure la taxe de bienvenue dans le calcul","Include the welcome tax in the calculation"),def:true,hint:B("Décochez si vous en êtes exempté ou pour voir les résultats sans elle.","Uncheck if you're exempt or to see the results without it.")},
   {k:"wtScale",type:"select",label:B("Barème","Rate scale"),opts:[B("Base du Québec 2026 (modifiable)","Québec 2026 base (editable)"),B("Montréal 2026","Montréal 2026")],def:0,hint:B("Le barème de base s'applique dans la plupart des municipalités. Montréal a ses propres tranches.","The base scale applies in most municipalities. Montréal has its own brackets.")},
   {k:"wt1",label:B("Fin de la tranche à 0,5 %","End of 0.5% bracket"),suf:"$",def:62900},
   {k:"wt2",label:B("Fin de la tranche à 1 %","End of 1% bracket"),suf:"$",def:315000},
@@ -370,11 +403,15 @@ const SECTIONS = [
  ]}},
  {title:B("Le financement","Financing"), lead:B("Les conditions de votre offre de prêt.","The terms of your mortgage offer."), fields:[
   {k:"downPct",label:B("Mise de fonds","Down payment"),suf:"%",def:20},
+  {k:"downAmt",type:"amount",label:B("Montant de la mise de fonds","Down payment amount"),suf:"$",hint:B("Modifiez le pourcentage ou le montant : l'autre s'ajuste.","Change the percentage or the amount: the other adjusts.")},
+  {k:"coOwner",type:"check",label:B("Achat en copropriété (par exemple avec votre conjoint)","Co-owned purchase (for example with your spouse)"),def:false,hint:B("Les gains, l'impôt et l'argent à fournir sont partagés selon la part de chacun.","Gains, tax and cash needed are split according to each owner's share.")},
+  {k:"share1",label:B("Votre part de la propriété","Your ownership share"),suf:"%",def:50,hint:B("L'autre propriétaire détient le reste. Son revenu se saisit dans la section Impôt.","The other owner holds the rest. Their income is entered in the Tax section.")},
   {k:"rate",label:B("Taux d'intérêt","Interest rate"),suf:"%",def:4.5,hint:B("Celui de votre offre. Valeur de l'exemple à remplacer.","The one in your offer. Example value, replace it.")},
   {k:"amort",label:B("Amortissement","Amortization"),suf:B("ans","yrs"),def:25},
   {k:"premTaxPct",label:B("Taxe de vente sur la prime SCHL","Sales tax on CMHC premium"),suf:"%",def:9,hint:B("Payée comptant chez le notaire, si la prime s'applique.","Paid in cash at the notary, if the premium applies.")}
  ]},
  {title:B("Les revenus","Income"), lead:B("Le loyer mensuel de chaque logement. Cochez celui où vous habiterez : il ne compte pas comme revenu, mais son loyer au marché sert à comparer votre coût de logement.","Monthly rent for each unit. Check the one you'll live in: it doesn't count as income, but its market rent is used to compare your housing cost."), units:true, fields:[
+  {k:"useFuture",type:"check",label:B("Projeter des loyers futurs","Project future rents"),def:false,hint:B("Ajoute au tableau un loyer futur par logement et l'année où il commence, par exemple après un départ de locataire ou des rénovations. Ce loyer augmente ensuite selon la hausse annuelle des loyers.","Adds a future rent per unit and the year it starts, for example after a tenant leaves or after renovations. It then grows with the annual rent increase.")},
   {k:"otherInc",label:B("Autres revenus par mois","Other income per month"),suf:"$",def:0,hint:B("Stationnement, buanderie, rangement.","Parking, laundry, storage.")},
   {k:"vacancy",label:B("Inoccupation et loyers impayés","Vacancy and unpaid rent"),suf:"%",def:3}
  ]},
@@ -390,14 +427,18 @@ const SECTIONS = [
   {k:"mgmtPct",label:B("Gestion","Property management"),suf:B("% des loyers","% of rent"),def:0,hint:B("Mettez 0 si vous gérez vous-même.","Enter 0 if you self-manage.")},
   {k:"capex",label:B("Réserve pour remplacements majeurs","Reserve for major replacements"),suf:B("$/logement/an","$/unit/yr"),def:600,hint:B("Toiture, fenêtres, chauffe-eau, électroménagers.","Roof, windows, water heater, appliances.")}
  ]},
- {title:B("L'impôt","Income tax"), lead:B("Pour calculer ce qui vous reste vraiment.","To calculate what you really keep."), fields:[
-  {k:"mr",label:B("Votre taux marginal d'imposition","Your marginal tax rate"),suf:"%",def:40,hint:B("Fédéral + Québec combinés, selon votre revenu total. Valeur de l'exemple à remplacer par la vôtre.","Federal + Québec combined, based on your total income. Example value, replace with yours.")},
+ {fold:"tax", title:B("L'impôt","Income tax"), lead:B("Pour calculer ce qui vous reste vraiment.","To calculate what you really keep."), fields:[
+  {k:"includeTax",inHead:true,type:"check",label:B("Inclure l'impôt dans le calcul","Include income tax in the calculation"),def:true,hint:B("Décochez pour voir tous les résultats avant impôt, y compris à la revente.","Uncheck to see all results before tax, including on sale.")},
+  {k:"taxMode",type:"select",label:B("Méthode de calcul","Calculation method"),opts:[B("Selon vos revenus (barèmes 2026)","Based on your income (2026 brackets)"),B("Taux marginal fixe","Fixed marginal rate")],def:0,hint:B("Selon vos revenus : l'impôt de l'immeuble est la différence entre votre impôt avec et sans le revenu locatif.","Based on your income: the building's tax is the difference between your tax with and without the rental income.")},
+  {k:"income1",label:B("Votre revenu imposable annuel, sans l'immeuble","Your annual taxable income, without the building"),suf:"$",def:80000,hint:B("Votre salaire brut est une bonne approximation. Vos cotisations REER et autres déductions le réduisent.","Your gross salary is a good approximation. RRSP contributions and other deductions reduce it.")},
+  {k:"income2",label:B("Revenu imposable de l'autre propriétaire","Other owner's taxable income"),suf:"$",def:80000},
+  {k:"mr",label:B("Taux marginal fixe","Fixed marginal rate"),suf:"%",def:40,hint:B("Utilisé seulement avec la méthode « Taux marginal fixe ».","Used only with the Fixed marginal rate method.")},
   {k:"targetPerUnit",label:B("Profit minimal visé par logement loué","Minimum target profit per rented unit"),suf:B("$/mois","$/mo"),def:50,hint:B("Votre propre seuil pour juger qu'un immeuble vaut l'effort.","Your own threshold for a building to be worth the effort.")},
   {k:"useCCA",type:"check",label:B("Réclamer l'amortissement fiscal (DPA)","Claim capital cost allowance (CCA)"),def:false,hint:B("Réduit l'impôt chaque année, mais il est récupéré à la revente.","Lowers tax each year, but it's recaptured when you sell.")},
   {k:"bldPct",label:B("Part du prix attribuée au bâtiment","Share of price allocated to the building"),suf:"%",def:70,hint:B("Le terrain ne s'amortit pas.","Land can't be depreciated.")},
   {k:"ccaRate",label:B("Taux de DPA","CCA rate"),suf:"%",def:4,hint:B("Catégorie 1 pour la plupart des immeubles résidentiels.","Class 1 for most residential buildings.")}
  ]},
- {title:B("La projection et la revente","Projection and sale"), lead:B("Hypothèses pour les années suivantes.","Assumptions for the following years."), fields:[
+ {fold:"proj", title:B("La projection et la revente","Projection and sale"), lead:B("Hypothèses pour les années suivantes.","Assumptions for the following years."), fields:[
   {k:"horizon",label:B("Durée de détention","Holding period"),suf:B("ans","yrs"),def:10},
   {k:"rentGrowth",label:B("Hausse des loyers","Rent increase"),suf:B("%/an","%/yr"),def:3,hint:B("Au Québec, les hausses sont encadrées par le Tribunal administratif du logement.","In Québec, increases are regulated by the Tribunal administratif du logement.")},
   {k:"expGrowth",label:B("Hausse des dépenses","Expense increase"),suf:B("%/an","%/yr"),def:3},
@@ -414,20 +455,33 @@ let units, vals={};
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function fieldHTML(f){
   const val= f.k in vals ? vals[f.k] : f.def;
+  if(f.type==="amount") return `<div class="field"><label for="f-${f.k}">${t(f.label)}</label><div class="inp"><input id="f-${f.k}" type="number" inputmode="decimal" step="any"><span class="suf">${t(f.suf)}</span></div>${f.hint?`<small>${t(f.hint)}</small>`:""}</div>`;
   if(f.type==="select") return `<div class="field"><label for="f-${f.k}">${t(f.label)}</label><div class="inp"><select id="f-${f.k}" data-k="${f.k}">${f.opts.map((o,j)=>`<option value="${j}" ${+val===j?"selected":""}>${t(o)}</option>`).join("")}</select></div>${f.hint?`<small>${t(f.hint)}</small>`:""}</div>`;
   if(f.type==="check") return `<div class="check-wrap"><label class="check"><input type="checkbox" data-k="${f.k}" ${val?"checked":""}><span>${t(f.label)}</span></label>${f.hint?`<small>${t(f.hint)}</small>`:""}</div>`;
   return `<div class="field"><label for="f-${f.k}">${t(f.label)}</label><div class="inp"><input id="f-${f.k}" type="number" inputmode="decimal" step="any" data-k="${f.k}" value="${val}"><span class="suf">${t(f.suf)}</span></div>${f.hint?`<small>${t(f.hint)}</small>`:""}</div>`;
 }
+const FKEY="rentaplex-folds";
+let folds={}; try{ folds=JSON.parse(localStorage.getItem(FKEY)||"{}")||{}; }catch(e){}
+form.addEventListener("toggle",e=>{ const d=e.target; if(!d.dataset||!d.dataset.fold)return; folds[d.dataset.fold]=d.open; try{localStorage.setItem(FKEY,JSON.stringify(folds));}catch(err){} },true);
+form.addEventListener("input",e=>{ if(e.target.id!=="f-downAmt")return; const P=parseFloat(document.getElementById("f-price").value)||0, a=parseFloat(e.target.value)||0; if(P>0){ document.getElementById("f-downPct").value=Math.round(a/P*10000)/100; update(); } });
+const headCheck=fs=>fs.filter(f=>f.inHead).map(f=>{const val= f.k in vals ? vals[f.k] : f.def; return `<label class="fold-check" title="${esc(t(f.hint))}"><input type="checkbox" data-k="${f.k}" aria-label="${esc(t(f.label))}" ${val?"checked":""}><span>${t(STR.include)}</span></label>`;}).join("");
 function buildForm(){
-  const th=t(STR.unitsTh);
-  form.innerHTML=SECTIONS.map(s=>`<section><h2>${t(s.title)}</h2><p class="lead">${t(s.lead)}</p>${s.units?`<table class="units"><thead><tr><th scope="col">${th[0]}</th><th scope="col">${th[1]}</th><th scope="col">${th[2]}</th><th></th></tr></thead><tbody id="unitRows"></tbody></table><button type="button" class="btn" id="addUnit">${t(STR.addUnit)}</button><div style="height:1rem"></div>`:""}<div class="grid">${s.fields.map(fieldHTML).join("")}</div>${s.sub?`<h3>${t(s.sub.title)}</h3><div class="grid">${s.sub.fields.map(fieldHTML).join("")}</div><div class="estimate"><button type="button" class="btn" id="estWT">${t(STR.estBtn)}</button><p id="wtOut"></p></div>`:""}</section>`).join("");
+  const chev=`<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`;
+  const body=s=>`${s.units?`<div style="overflow-x:auto"><table class="units"><thead id="unitHead"></thead><tbody id="unitRows"></tbody></table></div><button type="button" class="btn" id="addUnit">${t(STR.addUnit)}</button><div style="height:1rem"></div>`:""}<div class="grid">${s.fields.filter(f=>!f.inHead).map(fieldHTML).join("")}</div>${s.sub?`<details class="fold sub" data-fold="wt"${folds.wt?" open":""}><summary><h3>${t(s.sub.title)}</h3>${headCheck(s.sub.fields)}<span class="fold-note" id="note-wt"></span>${chev}</summary><div class="fold-body"><div class="grid">${s.sub.fields.filter(f=>!f.inHead).map(fieldHTML).join("")}</div><div class="estimate"><button type="button" class="btn" id="estWT">${t(STR.estBtn)}</button><p id="wtOut"></p></div></div></details>`:""}`;
+  form.innerHTML=SECTIONS.map(s=> s.fold
+    ? `<section><details class="fold" data-fold="${s.fold}"${folds[s.fold]?" open":""}><summary><h2>${t(s.title)}</h2>${headCheck(s.fields)}<span class="fold-note" id="note-${s.fold}"></span>${chev}</summary><div class="fold-body"><p class="lead">${t(s.lead)}</p>${body(s)}</div></details></section>`
+    : `<section><h2>${t(s.title)}</h2><p class="lead">${t(s.lead)}</p>${body(s)}</section>`).join("");
   renderUnits();
 }
 function renderUnits(){
   const rows=document.getElementById("unitRows"); if(!rows)return;
+  const fc=form.querySelector('[data-k="useFuture"]'), fut=!!(fc&&fc.checked), th=t(STR.unitsTh);
+  document.getElementById("unitHead").innerHTML=`<tr><th scope="col">${th[0]}</th><th scope="col">${th[1]}</th>${fut?`<th scope="col">${t(STR.futRent)}</th><th scope="col">${t(STR.futYear)}</th>`:""}<th scope="col">${th[2]}</th><th></th></tr>`;
   rows.innerHTML=units.map((u,i)=>`<tr>
    <td><input type="text" aria-label="${t(STR.unitName)} ${i+1}" data-u="${i}" data-f="label" value="${esc(u.label)}"></td>
-   <td><input type="number" inputmode="decimal" step="any" aria-label="${t(STR.unitsTh)[1]} ${esc(u.label)}" data-u="${i}" data-f="rent" value="${u.rent}"></td>
+   <td><input type="number" inputmode="decimal" step="any" aria-label="${th[1]} ${esc(u.label)}" data-u="${i}" data-f="rent" value="${u.rent}"></td>
+   ${fut?`<td><input type="number" inputmode="decimal" step="any" placeholder="—" aria-label="${t(STR.futRent)} ${esc(u.label)}" data-u="${i}" data-f="futureRent" value="${u.futureRent||""}" ${u.owner?"disabled":""}></td>
+   <td><input type="number" inputmode="numeric" min="1" step="1" aria-label="${t(STR.futYear)} ${esc(u.label)}" data-u="${i}" data-f="fromYear" value="${u.fromYear||2}" ${u.owner?"disabled":""}></td>`:""}
    <td class="own"><label class="check"><input type="checkbox" data-u="${i}" data-f="owner" ${u.owner?"checked":""}><span>${t(STR.yes)}</span></label></td>
    <td><button type="button" class="del" data-del="${i}" aria-label="${t(STR.remove)} ${esc(u.label)}" ${units.length<2?"disabled":""}>×</button></td></tr>`).join("");
 }
@@ -438,6 +492,12 @@ function applyStatic(){
   document.querySelectorAll("[data-ta]").forEach(el=>{const x=t(STR[el.dataset.ta]); el.setAttribute("aria-label",x); el.title=x;});
   const lb=document.getElementById("lang"); lb.textContent=t(STR.langBtn); lb.setAttribute("lang",L==="fr"?"en":"fr");
   const HIST=[
+    ["2.4",B("Cases « Inclure » de la taxe de bienvenue et de l'impôt dans le titre des sections","Include checkboxes for welcome tax and income tax in the section titles")],
+    ["2.3",B("Partage des gains entre copropriétaires selon la part de chacun","Gains split between co-owners by ownership share")],
+    ["2.2",B("Impôt calculé selon votre revenu (barèmes 2026) et copropriété","Tax based on your income (2026 brackets) and co-ownership")],
+    ["2.1",B("Montant de la mise de fonds en dollars, synchronisé avec le pourcentage","Down payment amount in dollars, synced with the percentage")],
+    ["2.0",B("Sections optionnelles repliables (taxe de bienvenue, impôt, projection)","Collapsible optional sections (welcome tax, income tax, projection)")],
+    ["1.9",B("Option pour exclure l'impôt et loyers futurs projetés par logement","Option to exclude income tax and projected future rents per unit")],
     ["1.8",B("Option pour exclure la taxe de bienvenue du calcul","Option to exclude the welcome tax from the calculation")],
     ["1.7",B("Panneau de réglages, renommage direct et icônes sur les onglets","Settings panel, inline rename and tab icons")],
     ["1.6",B("Prix offert, prix demandé et calcul du prix maximal","Offer price, asking price and highest price calculation")],
@@ -464,10 +524,10 @@ form.addEventListener("click",e=>{
 });
 form.addEventListener("input",e=>{
   const el=e.target;
-  if(el.dataset.k){ update(); return; }
+  if(el.dataset.k){ if(el.dataset.k==="useFuture") renderUnits(); update(); return; }
   const i=+el.dataset.u,f=el.dataset.f; if(isNaN(i))return;
   if(f==="owner"){ units.forEach((u,j)=>u.owner = j===i ? el.checked : (el.checked?false:u.owner)); renderUnits(); }
-  else units[i][f]= f==="rent" ? (parseFloat(el.value)||0) : el.value;
+  else units[i][f]= f==="label" ? el.value : (parseFloat(el.value)||0);
   update();
 });
 document.getElementById("reset").addEventListener("click",()=>{ vals={}; units=defUnits(); buildForm(); update(); });
@@ -497,9 +557,20 @@ function irr(cfs){
   return (lo+hi)/2;
 }
 
+const FED26=[[58523,.14],[117045,.205],[181440,.26],[258482,.29],[Infinity,.33]], QC26=[[54345,.14],[108680,.19],[132245,.24],[Infinity,.2575]], ABAT=.165;
+function bracketTax(x,B){ let t=0,lo=0; for(const [hi,r] of B){ if(x>lo) t+=(Math.min(x,hi)-lo)*r; lo=hi; } return t; }
+function taxOn(x){ x=Math.max(0,x); return bracketTax(x,FED26)*(1-ABAT)+bracketTax(x,QC26); }
+const incTax=(base,add)=>taxOn(base+add)-taxOn(base);
+const margRate=base=>incTax(base,1000)/1000;
 function compute(v,U){
   U=U||units;
-  const W=[];
+  const W=[], mrEff=v.includeTax===false?0:v.mr;
+  const noTax=v.includeTax===false, brk=+v.taxMode!==1, s1=v.coOwner?Math.min(100,Math.max(0,v.share1))/100:1, s2=v.coOwner?1-s1:0;
+  const t1=R=> noTax?0 : brk ? incTax(v.income1,s1*R) : s1*R*v.mr/100;
+  const t2=R=> (noTax||!s2)?0 : brk ? incTax(v.income2,s2*R) : s2*R*v.mr/100;
+  const st1=(Rl,G)=> noTax?0 : brk ? incTax(v.income1+s1*Rl,s1*G) : s1*G*v.mr/100;
+  const st2=(Rl,G)=> (noTax||!s2)?0 : brk ? incTax(v.income2+s2*Rl,s2*G) : s2*G*v.mr/100;
+  const fut=!!v.useFuture, unitRent=(u,y)=> (fut&&!u.owner&&u.futureRent>0&&y+1>=Math.max(1,u.fromYear||2)) ? u.futureRent*Math.pow(1+v.rentGrowth/100,y+1-Math.max(1,u.fromYear||2)) : u.rent*Math.pow(1+v.rentGrowth/100,y);
   const P=v.price, d=v.downPct/100, H=Math.max(1,Math.min(40,Math.round(v.horizon)||1));
   const nUnits=U.length, owner=U.find(u=>u.owner), oo=!!owner;
   const rented=U.filter(u=>!u.owner), nRented=rented.length;
@@ -525,8 +596,8 @@ function compute(v,U){
   const years=[];
   for(let y=0;y<H;y++){
     const g=Math.pow(1+gr,y), e=Math.pow(1+ge,y);
-    const gpr=(rentRented+v.otherInc*12)*g, vac=gpr*v.vacancy/100, egi=gpr-vac;
-    const gprAll=(rentAll+v.otherInc*12)*g;
+    const gpr=(rented.reduce((a,u)=>a+unitRent(u,y),0)*12+v.otherInc*12*g), vac=gpr*v.vacancy/100, egi=gpr-vac;
+    const gprAll=U.reduce((a,u)=>a+unitRent(u,y),0)*12+v.otherInc*12*g;
     const maint=gprAll*(1-v.vacancy/100)*v.maintPct/100, mgmt=egi*v.mgmtPct/100;
     const capex=v.capex*nUnits*e, fixed=fixedExp*e;
     const opex=fixed+maint+mgmt+capex, noi=egi-opex;
@@ -535,19 +606,22 @@ function compute(v,U){
     const ds=intY+prY, rentalNoi=egi-opex*f, intDed=intY*f;
     let cca=0;
     if(v.useCCA){ cca=Math.min(ucc*v.ccaRate/100*(y===0?.5:1), Math.max(0,rentalNoi-intDed)); ucc-=cca; ccaTotal+=cca; }
-    const taxable=rentalNoi-intDed-cca, tax=taxable*v.mr/100;
+    const taxable=rentalNoi-intDed-cca, tax1=t1(taxable), tax2=t2(taxable), tax=tax1+tax2;
     const cfPre=noi-ds, cfAfter=cfPre-tax, value=P*Math.pow(1+ga,y+1);
     const noiAll=gprAll*(1-v.vacancy/100)-(fixed+maint+gprAll*(1-v.vacancy/100)*v.mgmtPct/100+capex);
-    years.push({y:y+1,gpr,gprAll,egi,opex,fixed,maint,mgmt,capex,noi,noiAll,intY,prY,ds,cca,taxable,tax,cfPre,cfAfter,bal:Math.max(0,bal),value,equity:value-Math.max(0,bal)});
+    years.push({y:y+1,gpr,gprAll,egi,opex,fixed,maint,mgmt,capex,noi,noiAll,intY,prY,ds,cca,taxable,tax,tax1,tax2,cfPre,cfAfter,bal:Math.max(0,bal),value,equity:value-Math.max(0,bal)});
   }
   const last=years[H-1], S=last.value, sellCosts=S*v.sellPct/100;
-  const gain=S-sellCosts-costBasis, capTax=Math.max(0,gain)*f*.5*v.mr/100;
-  const recap=Math.min(ccaTotal, Math.max(0,S-sellCosts))*v.mr/100;
+  const gain=S-sellCosts-costBasis, G=Math.max(0,gain)*f*.5+Math.min(ccaTotal,Math.max(0,S-sellCosts)), sale1=st1(last.taxable,G), sale2=st2(last.taxable,G), capTax=sale1+sale2;
+  const recap=0;
   const netSale=S-sellCosts-last.bal-capTax-recap;
   const flows=[-cashNeeded].concat(years.map(r=>r.cfAfter)); flows[H]+=netSale;
   const cumCF=years.reduce((s,r)=>s+r.cfAfter,0);
+  let stab=null, stabLate=false;
+  if(fut){ const ys=rented.filter(u=>u.futureRent>0).map(u=>Math.max(1,u.fromYear||2)); if(ys.length){ const Y=Math.max(...ys); if(Y<=H) stab=years[Y-1]; else stabLate=true; } }
+  if(stabLate) W.push(B("Un loyer futur commence après la durée de détention : il n'apparaît pas dans la projection.","A future rent starts after the holding period: it doesn't appear in the projection."));
   return {v,W,P,d,down,loan,premium,premTax,wt,wtFull,wtBase,cashNeeded,pmt,years,y1:years[0],H,oo,owner,nRented,
-    S,capTax,recap,netSale,tri:irr(flows),cumCF,profitTotal:cumCF+netSale-cashNeeded};
+    S,capTax,recap,netSale,tri:irr(flows),cumCF,profitTotal:cumCF+netSale-cashNeeded,stab,stabLate,s1,s2,sale1,sale2,co:!!v.coOwner};
 }
 
 let lastMax=null;
@@ -587,6 +661,37 @@ function render(r){
   document.getElementById("vSub").textContent=sub;
   document.getElementById("vMonth").textContent=(m>0?"+":"")+money(m);
   document.getElementById("vMonthL").textContent = r.oo&&m<0 ? (fr?"ce que vous payez par mois pour y habiter, après revenus de location et impôt (année 1)":"what you pay per month to live there, after rental income and tax (year 1)") : (fr?"net par mois après hypothèque, dépenses et impôt (année 1)":"net per month after mortgage, expenses and tax (year 1)");
+  if(v.includeTax===false) document.getElementById("vMonthL").textContent = r.oo&&m<0 ? (fr?"ce que vous payez par mois pour y habiter, avant impôt (année 1)":"what you pay per month to live there, before tax (year 1)") : (fr?"net par mois après hypothèque et dépenses, avant impôt (année 1)":"net per month after mortgage and expenses, before tax (year 1)");
+  const sbx=document.getElementById("vStabBox");
+  if(r.stab){ sbx.hidden=false; document.getElementById("vStabL").textContent= fr?`Par mois dès l'année ${r.stab.y}`:`Per month from year ${r.stab.y}`; document.getElementById("vStab").textContent=(r.stab.cfAfter>0?"+":"")+money(r.stab.cfAfter/12); } else sbx.hidden=true;
+  const da=document.getElementById("f-downAmt"); if(da && document.activeElement!==da) da.value=Math.round(r.down);
+  const note=(id,x)=>{const el=document.getElementById("note-"+id); if(el) el.textContent=x;};
+  note("wt", v.includeWT===false ? (fr?"Exclue":"Excluded") : money(r.wt));
+  const mrShow= +v.taxMode===1 ? v.mr/100 : margRate(v.income1);
+  note("tax", v.includeTax===false ? (fr?"Exclu":"Excluded") : (+v.taxMode===1 ? (fr?`Taux fixe de ${pct(mrShow,0)}`:`Fixed ${pct(mrShow,0)} rate`) : (fr?`Votre taux marginal : ${pct(mrShow,1)}`:`Your marginal rate: ${pct(mrShow,1)}`)));
+  note("proj", fr?`${r.H} ans, revente estimée ${money(r.S)}`:`${r.H} years, estimated sale ${money(r.S)}`);
+  const dis=(k,x)=>{const el=form.querySelector(`[data-k="${k}"]`); if(el) el.disabled=x;};
+  const nt=v.includeTax===false, fixed=+v.taxMode===1;
+  ["useCCA","bldPct","ccaRate","taxMode"].forEach(k=>dis(k,nt));
+  dis("mr",nt||!fixed); dis("income1",nt||fixed);
+  dis("share1",!v.coOwner); dis("income2",nt||fixed||!v.coOwner);
+  const sp=document.getElementById("splitPanel"); sp.hidden=!r.co;
+  if(r.co){
+    const ow=[[r.s1,"tax1",r.sale1],[r.s2,"tax2",r.sale2]].map(([sh,tk,sl])=>{
+      const y1n=sh*y1.cfPre-y1[tk], cum=r.years.reduce((a,y)=>a+sh*y.cfPre-y[tk],0);
+      const last=r.years[r.H-1], proceeds=sh*(r.S-r.S*v.sellPct/100-last.bal)-sl;
+      return {sh,cash:sh*r.cashNeeded,m:y1n/12,y:y1n,tax:y1[tk],total:cum+proceeds-sh*r.cashNeeded};
+    });
+    const rows=[
+      [fr?"Part de la propriété":"Ownership share",o=>pct(o.sh,0)],
+      [fr?"Argent à fournir à l'achat":"Cash to bring at purchase",o=>money(o.cash)],
+      [fr?"Net par mois (année 1)":"Net per month (year 1)",o=>money(o.m),1],
+      [fr?"Net par année (année 1)":"Net per year (year 1)",o=>money(o.y)],
+      [fr?"Impôt (année 1)":"Tax (year 1)",o=>money(o.tax)],
+      [fr?`Enrichissement total sur ${r.H} ans`:`Total wealth gain over ${r.H} years`,o=>money(o.total),1]
+    ];
+    document.getElementById("split").innerHTML=`<table class="split"><thead><tr><th></th><th scope="col">${fr?"Vous":"You"}</th><th scope="col">${fr?"Copropriétaire":"Co-owner"}</th></tr></thead><tbody>`+rows.map(([l,f,b])=>`<tr${b?' class="sum"':""}><th scope="row">${l}</th><td>${f(ow[0])}</td><td>${f(ow[1])}</td></tr>`).join("")+`</tbody></table><small class="split-note">${fr?"L'argent à fournir est réparti selon la part de propriété. L'impôt de chacun dépend de son propre revenu.":"Cash needed is split by ownership share. Each owner's tax depends on their own income."}</small>`;
+  }
   document.getElementById("vYear").textContent=money(y1.cfAfter);
   document.getElementById("vCash").textContent=money(r.cashNeeded);
   document.getElementById("vCoc").textContent=pct(coc);
@@ -677,7 +782,7 @@ function render(r){
   ].map(([a,b])=>`<div>${a}<strong>${b}</strong></div>`).join("");
 }
 
-const KEY2="rentabilite-immeuble-v2", VER="1.8";
+const KEY2="rentabilite-immeuble-v2", VER="2.4";
 let scenarios=[], active=null, cmpSel=null, delArmed=null, archDelArmed=null, savedAt=0;
 const clone=o=>JSON.parse(JSON.stringify(o));
 const defVals=()=>Object.fromEntries(ALL.map(f=>[f.k, f.type==="check"?!!f.def:f.def]));
@@ -807,6 +912,8 @@ function renderCompare(){
     [fr?"Taxe de bienvenue":"Welcome tax",x=>x.r.wt,money,"low"],
     [fr?"Net par mois (année 1)":"Net per month (year 1)",x=>x.S.m,money,"high"],
     [fr?"Net par année (année 1)":"Net per year (year 1)",x=>x.r.y1.cfAfter,money,"high"],
+    [fr?"Net par mois avec loyers futurs":"Net per month with future rents",x=>x.r.stab?x.r.stab.cfAfter/12:null,v=>v==null?"—":money(v)+(fr?"":""),"high"],
+    [fr?"Impôt inclus":"Tax included",x=>x.r.v.includeTax===false?0:1,v=>v?(fr?"Oui":"Yes"):(fr?"Non":"No"),null],
     [fr?"Taux de capitalisation":"Cap rate",x=>x.S.cap,v=>pct(v,2),"high"],
     [fr?"Multiplicateur du revenu brut":"Gross rent multiplier",x=>x.S.mrb,v=>num(v,1),"low"],
     [fr?"Couverture de la dette":"Debt coverage (DSCR)",x=>x.S.dscr,v=>num(v),"high"],
