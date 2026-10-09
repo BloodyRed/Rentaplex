@@ -109,12 +109,13 @@ td.neg{color:var(--bad)} td.pos{color:var(--good)}
 .notes{font-size:.9rem;color:var(--muted);max-width:75ch}
 .notes li{margin-bottom:.45rem}
 .inp select{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;padding:.5rem .65rem}
-.inp input:disabled{opacity:.5}
+.inp input:disabled,.inp select:disabled{opacity:.5}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 .estimate{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center}
 .estimate p{margin:0;font-size:.92rem;font-weight:500;font-variant-numeric:tabular-nums}
 .tabbar{max-width:1240px;margin:0 auto;padding:0 1.25rem 1.25rem}
 .tabs-row{display:flex;gap:.5rem;align-items:flex-end;border-bottom:2px solid var(--ink);flex-wrap:wrap}
-.tabs{display:flex;gap:.25rem;overflow-x:auto;flex:1 1 auto;min-width:0}
+.tabs{display:flex;gap:.25rem;overflow-x:auto;flex:1 1 auto;min-width:0;align-items:flex-end}
 .tab{font:inherit;font-weight:500;font-size:.92rem;border:1px solid var(--line);border-bottom:0;background:transparent;color:var(--muted);padding:.5rem .9rem;border-radius:6px 6px 0 0;cursor:pointer;white-space:nowrap;max-width:16rem;overflow:hidden;text-overflow:ellipsis}
 .tab:hover{color:var(--ink)}
 .tab[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -134,7 +135,30 @@ table.cmp thead th{text-align:right}
 .pill[data-s=bad]{--s:var(--bad);--s-bg:var(--bad-bg)}
 .linkbtn{font:inherit;font-weight:600;background:none;border:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0}
 .brand{display:flex;align-items:center;gap:.55rem;font-family:var(--cond);font-weight:700;font-size:1.25rem;margin-bottom:.9rem;letter-spacing:.01em}
-.brand svg{width:34px;height:34px;flex:none}
+.brand>svg{width:34px;height:34px;flex:none}
+.iconbtn{display:inline-grid;place-items:center;width:2.3rem;height:2.3rem;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;padding:0;position:relative;flex:none}
+.iconbtn:hover{border-color:var(--ink)}
+.iconbtn svg{width:1.2rem;height:1.2rem}
+.badge{position:absolute;top:-.4rem;right:-.4rem;min-width:1.15rem;height:1.15rem;border-radius:999px;background:var(--steel);color:var(--bg);font-size:.7rem;font-weight:600;display:grid;place-items:center;padding:0 .25rem}
+.badge[hidden]{display:none}
+.scrim{position:fixed;inset:0;background:rgb(0 0 0 / .35);z-index:20}
+.scrim[hidden]{display:none}
+.settings{position:fixed;top:0;left:0;bottom:0;width:min(460px,100%);background:var(--bg);border-right:2px solid var(--ink);z-index:21;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 1.25rem) 1.25rem calc(env(safe-area-inset-bottom,0px) + 1.5rem);transform:translateX(-102%);visibility:hidden}
+.settings.open{transform:none;visibility:visible}
+@media (prefers-reduced-motion:no-preference){.settings{transition:transform .22s ease,visibility .22s}}
+.set-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.set-head h2{font-family:var(--cond);font-weight:700;font-size:1.6rem;margin:0}
+.set-sec{border-top:2px solid var(--ink);padding:1rem 0 1.4rem}
+.set-sec h3{font-size:1.02rem;margin:0 0 .8rem;display:flex;align-items:center}
+.tw{display:flex;align-items:center;border:1px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0;flex:none;max-width:100%}
+.tw.on{background:var(--ink);border-color:var(--ink)}
+.tw .tab{border:0}
+.tacts{display:flex;gap:.1rem;padding-right:.3rem}
+.tacts button{display:grid;place-items:center;width:1.9rem;height:1.9rem;border:0;background:transparent;color:var(--bg);border-radius:4px;cursor:pointer;opacity:.75;padding:0}
+.tacts button:hover{opacity:1;background:color-mix(in srgb,var(--bg) 20%,transparent)}
+.tacts button:disabled{opacity:.3;cursor:not-allowed;background:transparent}
+.tacts svg{width:1rem;height:1rem}
+.tedit{font:inherit;font-weight:500;font-size:.92rem;border:0;background:var(--surface);color:var(--ink);padding:.35rem .5rem;margin:.25rem .3rem;border-radius:4px;width:12rem;max-width:60vw}
 .drawers{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.9rem;align-items:flex-start}
 .drawer{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .9rem;flex:1 1 320px;min-width:0}
 .drawer summary{cursor:pointer;font-weight:600;font-size:.92rem}
@@ -146,7 +170,7 @@ table.cmp thead th{text-align:right}
 .arow span{flex:1 1 10rem;font-weight:500}
 .cloud-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.75rem 1rem}
 .cloud-grid .full{grid-column:1/-1}
-.cloud-grid input[type=text],.cloud-grid input[type=password],.cloud-grid select{width:100%;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:.45rem .6rem}
+.cloud-grid input[type=text],.cloud-grid input[type=password],.cloud-grid select{width:100%;font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:.45rem .6rem}
 .cloud-grid label.lbl{display:block;font-size:.85rem;font-weight:500;margin-bottom:.25rem}
 .cbtns{display:flex;flex-wrap:wrap;gap:.5rem}
 #cStatus{margin:0;font-size:.88rem}
@@ -174,7 +198,7 @@ table.cmp thead th{text-align:right}
 <body>
 <header class="top">
   <div>
-    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1F6A47"/><path d="M9 26V10h14v16" fill="none" stroke="#fff" stroke-width="2"/><path d="M7.5 9.5h17" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><g fill="#fff"><rect x="11.5" y="13" width="3" height="3"/><rect x="17.5" y="13" width="3" height="3"/><rect x="11.5" y="18.5" width="3" height="3"/><rect x="17.5" y="18.5" width="3" height="3"/></g></svg><span>Rentaplex</span></div>
+    <div class="brand"><button type="button" class="iconbtn" id="openSettings" data-ta="setOpen" aria-expanded="false" aria-controls="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span class="badge" id="setBadge" hidden></span></button><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1F6A47"/><path d="M9 26V10h14v16" fill="none" stroke="#fff" stroke-width="2"/><path d="M7.5 9.5h17" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><g fill="#fff"><rect x="11.5" y="13" width="3" height="3"/><rect x="17.5" y="13" width="3" height="3"/><rect x="11.5" y="18.5" width="3" height="3"/><rect x="17.5" y="18.5" width="3" height="3"/></g></svg><span>Rentaplex</span></div>
     <h1 data-t="h1"></h1>
     <p data-t="intro"></p>
   </div>
@@ -190,17 +214,14 @@ table.cmp thead th{text-align:right}
     <button class="btn" type="button" id="tabAdd" data-t="tabNew"></button>
     <a class="btn" href="#compare" data-t="cmpLink"></a>
   </div>
-  <div class="tabtools">
-    <label for="tabName" data-t="tabName"></label>
-    <input id="tabName" type="text" maxlength="60">
-    <button class="btn" type="button" id="tabDup" data-t="dup"></button>
-    <button class="btn" type="button" id="tabArch" data-t="arch"></button>
-    <button class="btn danger" type="button" id="tabDel"></button>
-  </div>
-  <div class="drawers">
-    <details class="drawer" id="archBox"><summary id="archSum"></summary><div id="archList"></div></details>
-    <details class="drawer" id="cloudBox"><summary><span class="dot" id="cDot"></span><span data-t="cloudT"></span></summary>
-      <div class="cloud-grid">
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="settings" id="settings" role="dialog" aria-modal="true" aria-labelledby="setT" aria-hidden="true" inert>
+  <div class="set-head"><h2 id="setT" data-t="setT"></h2><button type="button" class="iconbtn" id="closeSettings" data-ta="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+  <section class="set-sec">
+    <h3><span class="dot" id="cDot"></span><span data-t="cloudT"></span></h3>
+    <div class="cloud-grid">
         <div><label class="lbl" for="cBin" data-t="cBin"></label><input id="cBin" type="text" autocomplete="off" spellcheck="false"></div>
         <div><label class="lbl" for="cType" data-t="cType"></label><select id="cType"><option value="master">X-Master-Key</option><option value="access">X-Access-Key</option></select></div>
         <div class="full"><label class="lbl" for="cKey" data-t="cKey"></label><input id="cKey" type="password" autocomplete="off" spellcheck="false"></div>
@@ -215,8 +236,11 @@ table.cmp thead th{text-align:right}
         <p id="cStatus" class="full" role="status"></p>
         <small class="full" data-t="cHelp"></small>
       </div>
-    </details>
-  </div>
+  </section>
+  <section class="set-sec">
+    <h3 id="archSum"></h3>
+    <div id="archList"></div>
+  </section>
 </div>
 
 <div class="layout">
@@ -285,7 +309,8 @@ const STR={
  notesT:B("Hypothèses et limites","Assumptions and limits"),
  unitsTh:B(["Logement","Loyer / mois","J'y habite"],["Unit","Rent / month","I live here"]),
  pOffer:B("Votre offre","Your offer"), useMax:B("Offrir le prix maximal","Offer the highest price"),
- arch:B("Archiver","Archive"), archT:B("Archives","Archive"), archEmpty:B("Aucun immeuble archivé. Le bouton « Archiver » retire un onglet de la barre sans le supprimer.","No archived buildings. The Archive button removes a tab from the bar without deleting it."),
+ arch:B("Archiver","Archive"), archT:B("Archives","Archive"), archEmpty:B("Aucun immeuble archivé. L'icône d'archive sur un onglet le retire de la barre sans le supprimer. Pour supprimer un immeuble, archivez-le puis supprimez-le ici.","No archived buildings. The archive icon on a tab removes it from the bar without deleting it. To delete a building, archive it and then delete it here."),
+ setT:B("Réglages","Settings"), setOpen:B("Ouvrir les réglages","Open settings"), close:B("Fermer","Close"), rename:B("Renommer","Rename"), renameHint:B("Double-cliquez pour renommer","Double-click to rename"), archLast:B("Gardez au moins un onglet actif","Keep at least one active tab"),
  restore:B("Restaurer","Restore"), purge:B("Supprimer définitivement","Delete permanently"),
  cloudT:B("Sauvegarde JSONBin","JSONBin backup"), cBin:B("ID du bin","Bin ID"), cType:B("Type de clé","Key type"), cKey:B("Clé","Key"),
  cAuto:B("Envoyer automatiquement chaque modification","Automatically send every change"),
@@ -336,6 +361,7 @@ const SECTIONS = [
   {k:"reno",label:B("Rénovations au départ","Upfront renovations"),suf:"$",def:0,hint:B("Ajoutées au coût de l'immeuble.","Added to the building's cost.")},
   {k:"otherClose",label:B("Autres frais d'achat","Other closing costs"),suf:"$",def:0,hint:B("Ajustements de taxes, certificat de localisation, etc.","Tax adjustments, certificate of location, etc.")}
  ], sub:{title:B("Droits de mutation (taxe de bienvenue) 2026","Land transfer duties (welcome tax) 2026"), fields:[
+  {k:"includeWT",type:"check",label:B("Inclure la taxe de bienvenue dans le calcul","Include the welcome tax in the calculation"),def:true,hint:B("Décochez si vous en êtes exempté ou pour voir les résultats sans elle.","Uncheck if you're exempt or to see the results without it.")},
   {k:"wtScale",type:"select",label:B("Barème","Rate scale"),opts:[B("Base du Québec 2026 (modifiable)","Québec 2026 base (editable)"),B("Montréal 2026","Montréal 2026")],def:0,hint:B("Le barème de base s'applique dans la plupart des municipalités. Montréal a ses propres tranches.","The base scale applies in most municipalities. Montréal has its own brackets.")},
   {k:"wt1",label:B("Fin de la tranche à 0,5 %","End of 0.5% bracket"),suf:"$",def:62900},
   {k:"wt2",label:B("Fin de la tranche à 1 %","End of 1% bracket"),suf:"$",def:315000},
@@ -409,8 +435,11 @@ function applyStatic(){
   document.documentElement.lang= L==="fr"?"fr-CA":"en-CA";
   document.title= L==="fr"?"Rentaplex | Rentabilité d'un immeuble locatif":"Rentaplex | Rental property profitability";
   document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(STR[el.dataset.t]);});
+  document.querySelectorAll("[data-ta]").forEach(el=>{const x=t(STR[el.dataset.ta]); el.setAttribute("aria-label",x); el.title=x;});
   const lb=document.getElementById("lang"); lb.textContent=t(STR.langBtn); lb.setAttribute("lang",L==="fr"?"en":"fr");
   const HIST=[
+    ["1.8",B("Option pour exclure la taxe de bienvenue du calcul","Option to exclude the welcome tax from the calculation")],
+    ["1.7",B("Panneau de réglages, renommage direct et icônes sur les onglets","Settings panel, inline rename and tab icons")],
     ["1.6",B("Prix offert, prix demandé et calcul du prix maximal","Offer price, asking price and highest price calculation")],
     ["1.5",B("Sauvegarde JSONBin et archives d'onglets","JSONBin backup and tab archive")],
     ["1.4",B("Nom Rentaplex et icône","Rentaplex name and icon")],
@@ -484,7 +513,7 @@ function compute(v,U){
     if(d<.05) W.push(B("Une mise de fonds sous 5 % n'est pas admissible.","A down payment under 5% isn't eligible."));
   }
   const premium=base*premRate, loan=base+premium, premTax=premium*v.premTaxPct/100;
-  const wtBase=Math.max(P,v.evalMun), wt=welcomeTax(wtBase,v);
+  const wtBase=Math.max(P,v.evalMun), wtFull=welcomeTax(wtBase,v), wt=v.includeWT===false?0:wtFull;
   const cashNeeded=down+wt+v.notary+v.inspection+v.appraisal+premTax+v.reno+v.otherClose;
   const costBasis=P+wt+v.notary+v.inspection+v.appraisal+v.reno+v.otherClose;
   const i=Math.pow(1+v.rate/200,1/6)-1, n=Math.max(1,v.amort*12);
@@ -517,7 +546,7 @@ function compute(v,U){
   const netSale=S-sellCosts-last.bal-capTax-recap;
   const flows=[-cashNeeded].concat(years.map(r=>r.cfAfter)); flows[H]+=netSale;
   const cumCF=years.reduce((s,r)=>s+r.cfAfter,0);
-  return {v,W,P,d,down,loan,premium,premTax,wt,wtBase,cashNeeded,pmt,years,y1:years[0],H,oo,owner,nRented,
+  return {v,W,P,d,down,loan,premium,premTax,wt,wtFull,wtBase,cashNeeded,pmt,years,y1:years[0],H,oo,owner,nRented,
     S,capTax,recap,netSale,tri:irr(flows),cumCF,profitTotal:cumCF+netSale-cashNeeded};
 }
 
@@ -562,7 +591,10 @@ function render(r){
   document.getElementById("vCash").textContent=money(r.cashNeeded);
   document.getElementById("vCoc").textContent=pct(coc);
   const wo=document.getElementById("wtOut"); if(wo) wo.textContent= fr?`Taxe de bienvenue : ${money(r.wt)}, soit un taux moyen de ${pct(r.wt/(r.wtBase||1),2)} sur ${money(r.wtBase)}.`:`Welcome tax: ${money(r.wt)}, an average rate of ${pct(r.wt/(r.wtBase||1),2)} on ${money(r.wtBase)}.`;
-  ["wt1","wt2","wt3","wtRate4"].forEach(k=>{const el=document.getElementById("f-"+k); if(el) el.disabled=v.wtScale===1;});
+  ["wt1","wt2","wt3","wtRate4"].forEach(k=>{const el=document.getElementById("f-"+k); if(el) el.disabled=v.wtScale===1||!v.includeWT;});
+  ["wtScale","evalMun"].forEach(k=>{const el=document.getElementById("f-"+k); if(el) el.disabled=!v.includeWT;});
+  const eb=document.getElementById("estWT"); if(eb) eb.disabled=!v.includeWT;
+  if(wo && !v.includeWT) wo.textContent= fr?`Taxe de bienvenue exclue du calcul. Elle serait de ${money(r.wtFull)}.`:`Welcome tax excluded from the calculation. It would be ${money(r.wtFull)}.`;
   document.getElementById("warns").innerHTML=r.W.map(w=>`<p>${t(w)}</p>`).join("");
   document.getElementById("mbar").dataset.s=s;
   document.getElementById("mbarT").textContent=title;
@@ -617,7 +649,7 @@ function render(r){
   ],"detail");
   kv([
     [fr?"Mise de fonds":"Down payment",money(r.down)],
-    [fr?`Taxe de bienvenue (base ${money(r.wtBase)})`:`Welcome tax (based on ${money(r.wtBase)})`,money(r.wt)],
+    v.includeWT ? [fr?`Taxe de bienvenue (base ${money(r.wtBase)})`:`Welcome tax (based on ${money(r.wtBase)})`,money(r.wt)] : [fr?"Taxe de bienvenue (exclue)":"Welcome tax (excluded)",money(0)],
     [fr?"Notaire, inspection, évaluation":"Notary, inspection, appraisal",money(v.notary+v.inspection+v.appraisal)],
     ...(r.premium>0?[[fr?`Taxe sur prime SCHL (prime de ${money(r.premium)} ajoutée au prêt)`:`Tax on CMHC premium (${money(r.premium)} premium added to loan)`,money(r.premTax)]]:[]),
     [fr?"Rénovations et autres frais":"Renovations and other costs",money(v.reno+v.otherClose)],
@@ -645,7 +677,7 @@ function render(r){
   ].map(([a,b])=>`<div>${a}<strong>${b}</strong></div>`).join("");
 }
 
-const KEY2="rentabilite-immeuble-v2", VER="1.6";
+const KEY2="rentabilite-immeuble-v2", VER="1.8";
 let scenarios=[], active=null, cmpSel=null, delArmed=null, archDelArmed=null, savedAt=0;
 const clone=o=>JSON.parse(JSON.stringify(o));
 const defVals=()=>Object.fromEntries(ALL.map(f=>[f.k, f.type==="check"?!!f.def:f.def]));
@@ -659,49 +691,78 @@ const cur=()=>scenarios.find(x=>x.id===active);
 function syncCur(){ const sc=cur(); if(sc && form.querySelector("[data-k]")){ sc.vals=read(); sc.units=units; } }
 function setActive(sc){ active=sc.id; vals=sc.vals; units=sc.units; }
 function switchTo(id){ syncCur(); setActive(scenarios.find(x=>x.id===id)); buildForm(); renderTabs(); update(); }
+const SVA='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+const IC={
+  pen:`<svg ${SVA}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`,
+  copy:`<svg ${SVA}><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`,
+  arch:`<svg ${SVA}><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>`
+};
+let editingId=null;
 function renderTabs(){
-  const vis=visible();
-  document.getElementById("tabs").innerHTML=vis.map(sc=>`<button type="button" class="tab" role="tab" data-tab="${sc.id}" aria-selected="${sc.id===active}">${esc(sc.name||"—")}</button>`).join("");
-  const n=document.getElementById("tabName"); if(document.activeElement!==n) n.value=cur().name;
-  const d=document.getElementById("tabDel"); d.disabled=vis.length<2;
-  d.textContent= delArmed===active ? t(STR.delConfirm) : t(STR.del);
-  document.getElementById("tabArch").disabled=vis.length<2;
+  const vis=visible(), canArch=vis.length>1;
+  document.getElementById("tabs").innerHTML=vis.map(sc=>{
+    const on=sc.id===active, nm=esc(sc.name||"—");
+    const label= editingId===sc.id
+      ? `<input class="tedit" id="tedit" type="text" maxlength="60" value="${esc(sc.name||"")}" aria-label="${t(STR.rename)}">`
+      : `<button type="button" class="tab" role="tab" data-tab="${sc.id}" aria-selected="${on}"${on?` title="${t(STR.renameHint)}"`:""}>${nm}</button>`;
+    const acts= on ? `<span class="tacts"><button type="button" data-act="rename" aria-label="${t(STR.rename)} ${nm}" title="${t(STR.rename)}">${IC.pen}</button><button type="button" data-act="dup" aria-label="${t(STR.dup)} ${nm}" title="${t(STR.dup)}">${IC.copy}</button><button type="button" data-act="arch" aria-label="${t(STR.arch)} ${nm}" title="${canArch?t(STR.arch):t(STR.archLast)}"${canArch?"":" disabled"}>${IC.arch}</button></span>` : "";
+    return `<div class="tw${on?" on":""}">${label}${acts}</div>`;
+  }).join("");
+  const te=document.getElementById("tedit"); if(te && document.activeElement!==te){ te.focus(); te.select(); }
+  const onEl=document.querySelector(".tw.on"); if(onEl && onEl.scrollIntoView) onEl.scrollIntoView({block:"nearest",inline:"nearest"});
   renderArchive();
 }
 function renderArchive(){
   const a=archivedList();
   document.getElementById("archSum").textContent=`${t(STR.archT)} (${a.length})`;
+  const bd=document.getElementById("setBadge"); bd.textContent=a.length; bd.hidden=!a.length;
   document.getElementById("archList").innerHTML= a.length ? a.map(sc=>`<div class="arow"><span>${esc(sc.name||"—")}</span><button type="button" class="btn" data-restore="${sc.id}">${t(STR.restore)}</button><button type="button" class="btn danger" data-purge="${sc.id}">${archDelArmed===sc.id?t(STR.delConfirm):t(STR.purge)}</button></div>`).join("") : `<small>${t(STR.archEmpty)}</small>`;
 }
-document.getElementById("tabs").addEventListener("click",e=>{ const b=e.target.closest("[data-tab]"); if(b && b.dataset.tab!==active){ delArmed=null; switchTo(b.dataset.tab);} });
-document.getElementById("tabs").addEventListener("keydown",e=>{
-  if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;
-  const vis=visible(), i=vis.findIndex(x=>x.id===active), j=(i+(e.key==="ArrowRight"?1:-1)+vis.length)%vis.length;
-  switchTo(vis[j].id); document.querySelector(`[data-tab="${vis[j].id}"]`).focus();
-});
-document.getElementById("tabAdd").addEventListener("click",()=>{
-  syncCur(); const sc=newScenario(t(STR.defName)+" "+(scenarios.length+1));
-  scenarios.push(sc); cmpSel.push(sc.id); switchTo(sc.id);
-  const n=document.getElementById("tabName"); n.focus(); n.select();
-});
-document.getElementById("tabDup").addEventListener("click",()=>{
-  syncCur(); const src=cur(), sc=newScenario(src.name+" ("+t(STR.copy)+")",src);
-  scenarios.splice(scenarios.indexOf(src)+1,0,sc); cmpSel.push(sc.id); switchTo(sc.id);
-});
+function startRename(id){ editingId=id; renderTabs(); }
+function commitRename(keep){
+  const te=document.getElementById("tedit"); if(!te||!editingId)return;
+  const sc=scenarios.find(x=>x.id===editingId), v=te.value.trim();
+  editingId=null;
+  if(keep && v) sc.name=v;
+  renderTabs(); renderCompare(); save(true);
+  const b=document.querySelector(`[data-tab="${sc.id}"]`); if(b) b.focus();
+}
 function leaveCurrent(removeIt){
   const vis=visible(), i=vis.findIndex(x=>x.id===active), sc=cur();
   if(removeIt){ scenarios.splice(scenarios.indexOf(sc),1); cmpSel=cmpSel.filter(id=>id!==sc.id); } else sc.archived=true;
   const rest=visible(); setActive(rest[Math.max(0,Math.min(i-1,rest.length-1))]);
   buildForm(); renderTabs(); update();
 }
-document.getElementById("tabDel").addEventListener("click",()=>{
-  if(visible().length<2)return;
-  if(delArmed!==active){ delArmed=active; renderTabs(); setTimeout(()=>{ if(delArmed){ delArmed=null; renderTabs(); } },4000); return; }
-  delArmed=null; leaveCurrent(true);
+const tabsEl=document.getElementById("tabs");
+tabsEl.addEventListener("click",e=>{
+  const act=e.target.closest("[data-act]");
+  if(act){
+    const a=act.dataset.act;
+    if(a==="rename") startRename(active);
+    else if(a==="dup"){ syncCur(); const src=cur(), sc=newScenario(src.name+" ("+t(STR.copy)+")",src);
+      scenarios.splice(scenarios.indexOf(src)+1,0,sc); cmpSel.push(sc.id); switchTo(sc.id); startRename(sc.id); }
+    else if(a==="arch"){ if(visible().length<2)return; syncCur(); leaveCurrent(false); }
+    return;
+  }
+  const b=e.target.closest("[data-tab]"); if(b && b.dataset.tab!==active) switchTo(b.dataset.tab);
 });
-document.getElementById("tabArch").addEventListener("click",()=>{
-  if(visible().length<2)return; syncCur(); delArmed=null; leaveCurrent(false);
-  document.getElementById("archBox").open=true;
+tabsEl.addEventListener("dblclick",e=>{ const b=e.target.closest("[data-tab]"); if(b && b.dataset.tab===active) startRename(active); });
+tabsEl.addEventListener("focusout",e=>{ if(e.target.id==="tedit") commitRename(true); });
+tabsEl.addEventListener("keydown",e=>{
+  if(e.target.id==="tedit"){
+    if(e.key==="Enter"){ e.preventDefault(); commitRename(true); }
+    else if(e.key==="Escape"){ e.preventDefault(); commitRename(false); }
+    return;
+  }
+  if(e.key==="F2" && e.target.dataset.tab===active){ e.preventDefault(); startRename(active); return; }
+  if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;
+  if(!e.target.dataset.tab)return;
+  const vis=visible(), i=vis.findIndex(x=>x.id===active), j=(i+(e.key==="ArrowRight"?1:-1)+vis.length)%vis.length;
+  switchTo(vis[j].id); const nb=document.querySelector(`[data-tab="${vis[j].id}"]`); if(nb) nb.focus();
+});
+document.getElementById("tabAdd").addEventListener("click",()=>{
+  syncCur(); const sc=newScenario(t(STR.defName)+" "+(scenarios.length+1));
+  scenarios.push(sc); cmpSel.push(sc.id); switchTo(sc.id); startRename(sc.id);
 });
 document.getElementById("archList").addEventListener("click",e=>{
   const r=e.target.closest("[data-restore]"), p=e.target.closest("[data-purge]");
@@ -712,7 +773,14 @@ document.getElementById("archList").addEventListener("click",e=>{
     archDelArmed=null; scenarios=scenarios.filter(x=>x.id!==id); cmpSel=cmpSel.filter(x=>x!==id); renderTabs(); update();
   }
 });
-document.getElementById("tabName").addEventListener("input",e=>{ cur().name=e.target.value; renderTabs(); renderCompare(); save(true); });
+/* Réglages */
+const setEl=document.getElementById("settings"), scrim=document.getElementById("scrim"), gear=document.getElementById("openSettings");
+function openSet(){ setEl.classList.add("open"); setEl.removeAttribute("inert"); setEl.setAttribute("aria-hidden","false"); scrim.hidden=false; gear.setAttribute("aria-expanded","true"); document.getElementById("closeSettings").focus(); }
+function closeSet(){ if(!setEl.classList.contains("open"))return; setEl.classList.remove("open"); setEl.setAttribute("inert",""); setEl.setAttribute("aria-hidden","true"); scrim.hidden=true; gear.setAttribute("aria-expanded","false"); gear.focus(); }
+gear.addEventListener("click",openSet);
+document.getElementById("closeSettings").addEventListener("click",closeSet);
+scrim.addEventListener("click",closeSet);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSet(); });
 document.getElementById("cmpPick").addEventListener("change",e=>{
   const id=e.target.dataset.cmp; if(!id)return;
   cmpSel= e.target.checked ? cmpSel.concat(id) : cmpSel.filter(x=>x!==id);
