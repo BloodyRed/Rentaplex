@@ -235,6 +235,7 @@ table.cmp thead th{text-align:right}
       </div>
       <div class="warns" id="warns"></div>
     </div>
+    <div class="panel"><h2 data-t="pOffer"></h2><dl class="kv" id="offer"></dl><div class="estimate" style="margin-top:.75rem"><button class="btn" type="button" id="useMax" data-t="useMax"></button></div></div>
     <div class="panel"><h2 data-t="pChecks"></h2><ul class="checks" id="checks"></ul></div>
     <div class="panel"><h2 data-t="pBar"></h2><div class="bar" id="bar"></div><div class="legend" id="legend"></div></div>
     <div class="panel"><h2 data-t="pRatios"></h2><dl class="kv" id="ratios"></dl></div>
@@ -283,6 +284,7 @@ const STR={
  projLead:B("Selon vos hypothèses de hausse des loyers, des dépenses et de la valeur. Le taux d'intérêt est supposé constant; dans la réalité, il sera renégocié à chaque renouvellement.","Based on your assumptions for rent, expense and value growth. The interest rate is assumed constant; in reality it will be renegotiated at each renewal."),
  notesT:B("Hypothèses et limites","Assumptions and limits"),
  unitsTh:B(["Logement","Loyer / mois","J'y habite"],["Unit","Rent / month","I live here"]),
+ pOffer:B("Votre offre","Your offer"), useMax:B("Offrir le prix maximal","Offer the highest price"),
  arch:B("Archiver","Archive"), archT:B("Archives","Archive"), archEmpty:B("Aucun immeuble archivé. Le bouton « Archiver » retire un onglet de la barre sans le supprimer.","No archived buildings. The Archive button removes a tab from the bar without deleting it."),
  restore:B("Restaurer","Restore"), purge:B("Supprimer définitivement","Delete permanently"),
  cloudT:B("Sauvegarde JSONBin","JSONBin backup"), cBin:B("ID du bin","Bin ID"), cType:B("Type de clé","Key type"), cKey:B("Clé","Key"),
@@ -325,7 +327,8 @@ const SRCL=[
 
 const SECTIONS = [
  {title:B("L'achat","The purchase"), lead:B("Prix et frais ponctuels que vous paierez à la signature.","Price and one-time costs you'll pay at closing."), fields:[
-  {k:"price",label:B("Prix d'achat","Purchase price"),suf:"$",def:600000},
+  {k:"price",label:B("Prix que vous offrez","Your offer price"),suf:"$",def:600000,hint:B("Tous les calculs utilisent ce prix.","All calculations use this price.")},
+  {k:"askPrice",label:B("Prix demandé par le vendeur","Seller's asking price"),suf:"$",def:0,hint:B("Laissez 0 si vous ne le connaissez pas.","Leave 0 if you don't know it.")},
   {k:"evalMun",label:B("Évaluation municipale","Municipal assessment"),suf:"$",def:560000,hint:B("Sert au calcul de la taxe de bienvenue.","Used to calculate the welcome tax.")},
   {k:"notary",label:B("Notaire","Notary"),suf:"$",def:2000},
   {k:"inspection",label:B("Inspection","Inspection"),suf:"$",def:900},
@@ -408,6 +411,7 @@ function applyStatic(){
   document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(STR[el.dataset.t]);});
   const lb=document.getElementById("lang"); lb.textContent=t(STR.langBtn); lb.setAttribute("lang",L==="fr"?"en":"fr");
   const HIST=[
+    ["1.6",B("Prix offert, prix demandé et calcul du prix maximal","Offer price, asking price and highest price calculation")],
     ["1.5",B("Sauvegarde JSONBin et archives d'onglets","JSONBin backup and tab archive")],
     ["1.4",B("Nom Rentaplex et icône","Rentaplex name and icon")],
     ["1.3",B("Onglets nommés par immeuble et tableau de comparaison","Named tabs per building and comparison table")],
@@ -517,6 +521,16 @@ function compute(v,U){
     S,capTax,recap,netSale,tri:irr(flows),cumCF,profitTotal:cumCF+netSale-cashNeeded};
 }
 
+let lastMax=null;
+function maxPrice(v,U){
+  const ok=P=>summary(compute(Object.assign({},v,{price:P}),U)).s==="good";
+  if(!ok(1000)) return null;
+  let lo=1000, hi=Math.max(v.price,v.askPrice||0,100000)*3;
+  if(ok(hi)) return Math.floor(hi/1000)*1000;
+  for(let k=0;k<40;k++){ const m=(lo+hi)/2; if(ok(m)) lo=m; else hi=m; }
+  return Math.floor(lo/1000)*1000;
+}
+document.getElementById("useMax").addEventListener("click",()=>{ if(lastMax==null)return; document.getElementById("f-price").value=lastMax; update(); });
 function summary(r){
   const {v,y1}=r, m=y1.cfAfter/12, fr=L==="fr";
   const dscr=y1.ds>0?y1.noi/y1.ds:Infinity, cap=y1.noiAll/r.P, mrb=r.P/y1.gprAll, coc=y1.cfAfter/r.cashNeeded;
@@ -610,6 +624,13 @@ function render(r){
     [fr?"Total à prévoir":"Total to plan for",money(r.cashNeeded),1],
     [fr?"Montant du prêt":"Loan amount",money(r.loan)]
   ],"cashList");
+  const mx=maxPrice(v,units), ask=v.askPrice; lastMax=mx;
+  const orows=[[fr?"Prix offert":"Offer price",money(r.P)]];
+  if(ask>0) orows.push([fr?"Prix demandé":"Asking price",money(ask)],[fr?"Écart avec le prix demandé":"Difference from asking",`${money(r.P-ask)} (${pct((r.P-ask)/ask)})`]);
+  orows.push([fr?"Prix maximal pour un verdict vert":"Highest price for a green verdict", mx==null?(fr?"Aucun prix ne suffit":"No price works"):money(mx),1]);
+  if(mx!=null && ask>0) orows.push([fr?"Rabais à négocier pour y arriver":"Discount to negotiate to get there", mx>=ask?(fr?"Aucun":"None"):`${money(ask-mx)} (${pct((ask-mx)/ask)})`]);
+  kv(orows,"offer");
+  document.getElementById("useMax").disabled= mx==null || Math.abs(mx-r.P)<1000;
 
   const td=(x,c)=>`<td class="${c?(x<0?"neg":"pos"):""}">${money(x)}</td>`;
   const heads=fr?["Année","Revenus effectifs","Dépenses","RNE","Hypothèque","Impôt","Net après impôt","Net par mois","Solde du prêt","Valeur estimée","Avoir net"]:["Year","Effective income","Expenses","NOI","Mortgage","Tax","Net after tax","Net per month","Loan balance","Estimated value","Equity"];
@@ -624,7 +645,7 @@ function render(r){
   ].map(([a,b])=>`<div>${a}<strong>${b}</strong></div>`).join("");
 }
 
-const KEY2="rentabilite-immeuble-v2", VER="1.5";
+const KEY2="rentabilite-immeuble-v2", VER="1.6";
 let scenarios=[], active=null, cmpSel=null, delArmed=null, archDelArmed=null, savedAt=0;
 const clone=o=>JSON.parse(JSON.stringify(o));
 const defVals=()=>Object.fromEntries(ALL.map(f=>[f.k, f.type==="check"?!!f.def:f.def]));
@@ -712,6 +733,8 @@ function renderCompare(){
   const rows=[
     [fr?"Prix d'achat":"Purchase price",x=>x.r.P,money,"low"],
     [fr?"Nombre de logements":"Number of units",x=>x.sc.units.length,v=>v,null],
+    [fr?"Prix demandé":"Asking price",x=>x.r.v.askPrice||null,v=>v?money(v):"—",null],
+    [fr?"Prix maximal (verdict vert)":"Highest price (green verdict)",x=>maxPrice(x.r.v,x.sc.units),v=>v==null?"n/a":money(v),"high"],
     [fr?"Liquidités requises":"Cash needed",x=>x.r.cashNeeded,money,"low"],
     [fr?"Taxe de bienvenue":"Welcome tax",x=>x.r.wt,money,"low"],
     [fr?"Net par mois (année 1)":"Net per month (year 1)",x=>x.S.m,money,"high"],
