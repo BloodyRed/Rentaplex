@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rentaplex</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="description" content="Rentaplex : calculez la rentabilité d'un immeuble locatif au Québec (hypothèque, taxes, impôt, taxe de bienvenue) et comparez plusieurs immeubles.">
+<meta name="theme-color" content="#1F6A47">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E8EBE7; --surface:#F7F8F5; --ink:#1C2630; --muted:#56626D; --line:#C7CEC8;
+  --steel:#2F5170; --good:#1F6A47; --good-bg:#D8ECDF; --warn:#8A5A00; --warn-bg:#F4E5C2;
+  --bad:#9E241C; --bad-bg:#F5D8D3; --focus:#2F5170;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A1F; --surface:#1C242B; --ink:#E4E9E6; --muted:#9BA7B0; --line:#33404A;
+    --steel:#8DB0CF; --good:#6FCB9A; --good-bg:#16342A; --warn:#E6B656; --warn-bg:#382C12;
+    --bad:#F18C82; --bad-bg:#3C1D1A; --focus:#8DB0CF;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A1F; --surface:#1C242B; --ink:#E4E9E6; --muted:#9BA7B0; --line:#33404A;
+  --steel:#8DB0CF; --good:#6FCB9A; --good-bg:#16342A; --warn:#E6B656; --warn-bg:#382C12;
+  --bad:#F18C82; --bad-bg:#3C1D1A; --focus:#8DB0CF;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--steel)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.top{max-width:1240px;margin:0 auto;padding:2rem 1.25rem 1rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;justify-content:space-between}
+.top h1{font-family:var(--cond);font-weight:700;font-size:clamp(1.9rem,4vw,2.8rem);line-height:1.05;margin:0;letter-spacing:-.01em;max-width:18ch}
+.top p{margin:.5rem 0 0;color:var(--muted);max-width:60ch}
+.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.5rem .9rem;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--steel)}
+.layout{max-width:1240px;margin:0 auto;padding:0 1.25rem 3rem;display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:2rem;align-items:start}
+form section{border-top:2px solid var(--ink);padding:1.25rem 0 1.75rem}
+form h2{font-family:var(--cond);font-weight:600;font-size:1.35rem;margin:0 0 .25rem}
+form h3{font-size:.95rem;font-weight:600;margin:1.4rem 0 .6rem;color:var(--muted)}
+.lead{color:var(--muted);margin:0 0 1rem;font-size:.92rem;max-width:65ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem 1.25rem}
+.field label{display:block;font-size:.88rem;font-weight:500;margin-bottom:.3rem}
+.inp{display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.inp:focus-within{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.inp input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums;padding:.5rem .65rem}
+.inp input:focus{outline:none}
+.suf{padding:.5rem .6rem;color:var(--muted);font-size:.85rem;border-left:1px solid var(--line);white-space:nowrap;display:flex;align-items:center}
+.field small,.check-wrap small{display:block;color:var(--muted);font-size:.8rem;margin-top:.3rem;line-height:1.4}
+.check-wrap{grid-column:1/-1}
+.check{display:flex;gap:.55rem;align-items:center;font-weight:500;font-size:.92rem;cursor:pointer}
+.check input{width:1.1rem;height:1.1rem;accent-color:var(--steel)}
+.units{width:100%;border-collapse:collapse;margin-bottom:.75rem}
+.units th{text-align:left;font-size:.8rem;font-weight:500;color:var(--muted);padding:0 .4rem .4rem 0}
+.units td{padding:.3rem .4rem .3rem 0;vertical-align:middle}
+.units input[type=text],.units input[type=number]{width:100%;font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:.45rem .55rem;font-variant-numeric:tabular-nums}
+.units .del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:1.2rem;padding:.2rem .4rem;border-radius:4px}
+.units .del:hover{color:var(--bad)}
+.units td.own{white-space:nowrap}
+aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1rem);max-height:calc(100vh - 2rem);overflow:auto;padding-bottom:1rem}
+.verdict{border-radius:10px;padding:1.25rem 1.3rem 1.3rem;background:var(--s-bg);color:var(--ink);border:2px solid var(--s)}
+.verdict[data-s=good]{--s:var(--good);--s-bg:var(--good-bg)}
+.verdict[data-s=warn]{--s:var(--warn);--s-bg:var(--warn-bg)}
+.verdict[data-s=bad]{--s:var(--bad);--s-bg:var(--bad-bg)}
+.v-title{font-family:var(--cond);font-weight:700;font-size:1.6rem;color:var(--s);margin:0;line-height:1.1}
+.v-sub{margin:.3rem 0 1rem;font-size:.92rem}
+.v-big{font-family:var(--cond);font-weight:700;font-size:clamp(2.6rem,6vw,3.4rem);line-height:1;color:var(--s);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.v-big-l{font-size:.85rem;margin-top:.3rem}
+.v-row{display:flex;gap:1.5rem;margin-top:1rem;flex-wrap:wrap}
+.v-row div{font-size:.85rem}
+.v-row strong{display:block;font-family:var(--cond);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem;margin-top:1rem}
+.panel h2{font-size:1rem;font-weight:600;margin:0 0 .7rem}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:.45rem;font-size:.9rem}
+.checks li{display:grid;grid-template-columns:1.3rem 1fr;gap:.3rem}
+.checks .ok{color:var(--good);font-weight:600}
+.checks .no{color:var(--bad);font-weight:600}
+.kv{display:grid;grid-template-columns:1fr auto;gap:.35rem 1rem;font-size:.9rem;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.kv dt.sum,.kv dd.sum{border-top:1px solid var(--line);padding-top:.35rem;color:var(--ink);font-weight:600}
+.bar{display:flex;height:22px;border-radius:5px;overflow:hidden;margin:.2rem 0 .7rem;background:var(--line)}
+.bar span{display:block;height:100%}
+.legend{display:grid;grid-template-columns:auto 1fr auto;gap:.3rem .55rem;font-size:.85rem;align-items:center}
+.sw{width:.75rem;height:.75rem;border-radius:2px}
+.legend b{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.warns{margin:.75rem 0 0;padding:.7rem .85rem;border-left:3px solid var(--warn);background:var(--warn-bg);font-size:.86rem;border-radius:0 6px 6px 0}
+.warns:empty{display:none}
+.warns p{margin:0}.warns p+p{margin-top:.4rem}
+.wide{max-width:1240px;margin:0 auto;padding:0 1.25rem 2.5rem}
+.wide h2{font-family:var(--cond);font-weight:600;font-size:1.5rem;margin:0 0 .4rem;border-top:2px solid var(--ink);padding-top:1.25rem}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table.proj{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums;min-width:820px}
+table.proj th,table.proj td{padding:.5rem .7rem;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.proj th:first-child,table.proj td:first-child{text-align:left}
+table.proj thead th{font-weight:600;font-size:.8rem;color:var(--muted);background:var(--bg)}
+td.neg{color:var(--bad)} td.pos{color:var(--good)}
+.sale{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-top:1rem}
+.sale div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.8rem 1rem;font-size:.85rem}
+.sale strong{display:block;font-family:var(--cond);font-size:1.4rem;font-variant-numeric:tabular-nums;margin-top:.15rem}
+.notes{font-size:.9rem;color:var(--muted);max-width:75ch}
+.notes li{margin-bottom:.45rem}
+.inp select{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;padding:.5rem .65rem}
+.inp input:disabled{opacity:.5}
+.estimate{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center}
+.estimate p{margin:0;font-size:.92rem;font-weight:500;font-variant-numeric:tabular-nums}
+.tabbar{max-width:1240px;margin:0 auto;padding:0 1.25rem 1.25rem}
+.tabs-row{display:flex;gap:.5rem;align-items:flex-end;border-bottom:2px solid var(--ink);flex-wrap:wrap}
+.tabs{display:flex;gap:.25rem;overflow-x:auto;flex:1 1 auto;min-width:0}
+.tab{font:inherit;font-weight:500;font-size:.92rem;border:1px solid var(--line);border-bottom:0;background:transparent;color:var(--muted);padding:.5rem .9rem;border-radius:6px 6px 0 0;cursor:pointer;white-space:nowrap;max-width:16rem;overflow:hidden;text-overflow:ellipsis}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs-row .btn{margin-bottom:.35rem;text-decoration:none}
+.tabtools{display:flex;flex-wrap:wrap;gap:.5rem .75rem;align-items:center;margin-top:.75rem;font-size:.9rem}
+.tabtools label{font-weight:500}
+.tabtools input{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:.45rem .6rem;min-width:min(16rem,100%)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.cmp-pick{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;margin:.25rem 0 1rem}
+table.proj.cmp{min-width:560px}
+table.cmp td.best{color:var(--good);font-weight:700}
+table.cmp thead th{text-align:right}
+.pill{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-weight:600;font-size:.82rem;background:var(--s-bg);color:var(--s)}
+.pill[data-s=good]{--s:var(--good);--s-bg:var(--good-bg)}
+.pill[data-s=warn]{--s:var(--warn);--s-bg:var(--warn-bg)}
+.pill[data-s=bad]{--s:var(--bad);--s-bg:var(--bad-bg)}
+.linkbtn{font:inherit;font-weight:600;background:none;border:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0}
+.brand{display:flex;align-items:center;gap:.55rem;font-family:var(--cond);font-weight:700;font-size:1.25rem;margin-bottom:.9rem;letter-spacing:.01em}
+.brand svg{width:34px;height:34px;flex:none}
+.drawers{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.9rem;align-items:flex-start}
+.drawer{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .9rem;flex:1 1 320px;min-width:0}
+.drawer summary{cursor:pointer;font-weight:600;font-size:.92rem}
+.drawer[open] summary{margin-bottom:.75rem}
+.dot{display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:var(--muted);margin-right:.45rem;vertical-align:middle}
+.dot.on{background:var(--good)} .dot.err{background:var(--bad)}
+.arow{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:.45rem 0;border-top:1px solid var(--line)}
+.arow:first-child{border-top:0}
+.arow span{flex:1 1 10rem;font-weight:500}
+.cloud-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.75rem 1rem}
+.cloud-grid .full{grid-column:1/-1}
+.cloud-grid input[type=text],.cloud-grid input[type=password],.cloud-grid select{width:100%;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:.45rem .6rem}
+.cloud-grid label.lbl{display:block;font-size:.85rem;font-weight:500;margin-bottom:.25rem}
+.cbtns{display:flex;flex-wrap:wrap;gap:.5rem}
+#cStatus{margin:0;font-size:.88rem}
+#cStatus.err{color:var(--bad)} #cStatus.ok{color:var(--good)}
+.drawer small{display:block;color:var(--muted);font-size:.8rem;line-height:1.45}
+.ver{font-size:.85rem;color:var(--muted)}
+.ver summary{cursor:pointer;font-weight:500}
+.ver ul{margin:.5rem 0 0;padding-left:1.2rem}
+.ver li{margin-bottom:.25rem}
+.mbar{display:none}
+@media (max-width:920px){
+  .layout{grid-template-columns:1fr}
+  aside{position:static;max-height:none;overflow:visible}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;gap:.75rem;align-items:center;justify-content:space-between;
+    padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px));background:var(--s-bg);border-top:2px solid var(--s);color:var(--ink);text-decoration:none}
+  .mbar[data-s=good]{--s:var(--good);--s-bg:var(--good-bg)}
+  .mbar[data-s=warn]{--s:var(--warn);--s-bg:var(--warn-bg)}
+  .mbar[data-s=bad]{--s:var(--bad);--s-bg:var(--bad-bg)}
+  .mbar b{font-family:var(--cond);font-size:1.35rem;color:var(--s);font-variant-numeric:tabular-nums}
+  body{padding-bottom:4.5rem}
+}
+@media (prefers-reduced-motion:no-preference){.verdict,.mbar{transition:background-color .25s,border-color .25s}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1F6A47"/><path d="M9 26V10h14v16" fill="none" stroke="#fff" stroke-width="2"/><path d="M7.5 9.5h17" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><g fill="#fff"><rect x="11.5" y="13" width="3" height="3"/><rect x="17.5" y="13" width="3" height="3"/><rect x="11.5" y="18.5" width="3" height="3"/><rect x="17.5" y="18.5" width="3" height="3"/></g></svg><span>Rentaplex</span></div>
+    <h1 data-t="h1"></h1>
+    <p data-t="intro"></p>
+  </div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <button class="btn" type="button" id="lang" aria-pressed="false"></button>
+    <button class="btn" type="button" id="reset" data-t="reset"></button>
+  </div>
+</header>
+
+<div class="tabbar">
+  <div class="tabs-row">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <button class="btn" type="button" id="tabAdd" data-t="tabNew"></button>
+    <a class="btn" href="#compare" data-t="cmpLink"></a>
+  </div>
+  <div class="tabtools">
+    <label for="tabName" data-t="tabName"></label>
+    <input id="tabName" type="text" maxlength="60">
+    <button class="btn" type="button" id="tabDup" data-t="dup"></button>
+    <button class="btn" type="button" id="tabArch" data-t="arch"></button>
+    <button class="btn danger" type="button" id="tabDel"></button>
+  </div>
+  <div class="drawers">
+    <details class="drawer" id="archBox"><summary id="archSum"></summary><div id="archList"></div></details>
+    <details class="drawer" id="cloudBox"><summary><span class="dot" id="cDot"></span><span data-t="cloudT"></span></summary>
+      <div class="cloud-grid">
+        <div><label class="lbl" for="cBin" data-t="cBin"></label><input id="cBin" type="text" autocomplete="off" spellcheck="false"></div>
+        <div><label class="lbl" for="cType" data-t="cType"></label><select id="cType"><option value="master">X-Master-Key</option><option value="access">X-Access-Key</option></select></div>
+        <div class="full"><label class="lbl" for="cKey" data-t="cKey"></label><input id="cKey" type="password" autocomplete="off" spellcheck="false"></div>
+        <label class="check full"><input type="checkbox" id="cAuto"><span data-t="cAuto"></span></label>
+        <label class="check full"><input type="checkbox" id="cRemember"><span data-t="cRemember"></span></label>
+        <div class="cbtns full">
+          <button class="btn" type="button" id="cPull" data-t="cPull"></button>
+          <button class="btn" type="button" id="cPush" data-t="cPush"></button>
+          <button class="btn" type="button" id="cCreate" data-t="cCreate"></button>
+          <button class="btn" type="button" id="cForget" data-t="cForget"></button>
+        </div>
+        <p id="cStatus" class="full" role="status"></p>
+        <small class="full" data-t="cHelp"></small>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div class="layout">
+  <form id="f" novalidate></form>
+
+  <aside id="results" aria-live="polite">
+    <div class="verdict" id="verdict" data-s="good">
+      <p class="v-title" id="vTitle"></p>
+      <p class="v-sub" id="vSub"></p>
+      <div class="v-big" id="vMonth"></div>
+      <div class="v-big-l" id="vMonthL"></div>
+      <div class="v-row">
+        <div><span data-t="perYear"></span><strong id="vYear"></strong></div>
+        <div><span data-t="cashReq"></span><strong id="vCash"></strong></div>
+        <div><span data-t="coc"></span><strong id="vCoc"></strong></div>
+      </div>
+      <div class="warns" id="warns"></div>
+    </div>
+    <div class="panel"><h2 data-t="pChecks"></h2><ul class="checks" id="checks"></ul></div>
+    <div class="panel"><h2 data-t="pBar"></h2><div class="bar" id="bar"></div><div class="legend" id="legend"></div></div>
+    <div class="panel"><h2 data-t="pRatios"></h2><dl class="kv" id="ratios"></dl></div>
+    <div class="panel"><h2 data-t="pDetail"></h2><dl class="kv" id="detail"></dl></div>
+    <div class="panel"><h2 data-t="pCash"></h2><dl class="kv" id="cashList"></dl></div>
+  </aside>
+</div>
+
+<section class="wide">
+  <h2 data-t="projT"></h2>
+  <p class="lead" data-t="projLead"></p>
+  <div class="scroll"><table class="proj" id="proj"></table></div>
+  <div class="sale" id="sale"></div>
+</section>
+
+<section class="wide" id="compare">
+  <h2 data-t="cmpT"></h2>
+  <p class="lead" data-t="cmpLead"></p>
+  <div class="cmp-pick" id="cmpPick"></div>
+  <div id="cmpOut"></div>
+</section>
+
+<section class="wide">
+  <h2 data-t="notesT"></h2>
+  <ul class="notes" id="notes"></ul>
+</section>
+
+<footer class="wide ver"><details id="ver"></details></footer>
+
+<a class="mbar" id="mbar" href="#results" data-s="good"><span id="mbarT"></span><b id="mbarV"></b></a>
+
+<script>
+(function(){
+let L="fr";
+const t=o=>o==null?"":(typeof o==="string"?o:o[L]);
+const B=(fr,en)=>({fr,en});
+const STR={
+ h1:B("Est-ce que cet immeuble est rentable?","Is this building profitable?"),
+ intro:B("Entrez les chiffres de l'immeuble que vous visez. Le verdict et vos gains nets se recalculent à chaque modification. Vos données restent dans ce navigateur.","Enter the numbers for the building you're looking at. The verdict and your net earnings update with every change. Your data stays in this browser."),
+ reset:B("Revenir à l'exemple","Reset to example"),
+ langBtn:B("English","Français"),
+ perYear:B("Par année","Per year"), cashReq:B("Liquidités requises","Cash needed"), coc:B("Rendement sur mise de fonds","Return on cash invested"),
+ pChecks:B("Les vérifications","The checks"), pBar:B("Où va chaque dollar de loyer (par mois)","Where each rent dollar goes (per month)"),
+ pRatios:B("Ratios d'analyse","Key ratios"), pDetail:B("Année 1 en détail","Year 1 in detail"), pCash:B("Argent à sortir à l'achat","Cash to bring at purchase"),
+ projT:B("Projection année par année","Year-by-year projection"),
+ projLead:B("Selon vos hypothèses de hausse des loyers, des dépenses et de la valeur. Le taux d'intérêt est supposé constant; dans la réalité, il sera renégocié à chaque renouvellement.","Based on your assumptions for rent, expense and value growth. The interest rate is assumed constant; in reality it will be renegotiated at each renewal."),
+ notesT:B("Hypothèses et limites","Assumptions and limits"),
+ unitsTh:B(["Logement","Loyer / mois","J'y habite"],["Unit","Rent / month","I live here"]),
+ arch:B("Archiver","Archive"), archT:B("Archives","Archive"), archEmpty:B("Aucun immeuble archivé. Le bouton « Archiver » retire un onglet de la barre sans le supprimer.","No archived buildings. The Archive button removes a tab from the bar without deleting it."),
+ restore:B("Restaurer","Restore"), purge:B("Supprimer définitivement","Delete permanently"),
+ cloudT:B("Sauvegarde JSONBin","JSONBin backup"), cBin:B("ID du bin","Bin ID"), cType:B("Type de clé","Key type"), cKey:B("Clé","Key"),
+ cAuto:B("Envoyer automatiquement chaque modification","Automatically send every change"),
+ cRemember:B("Se souvenir de la clé sur cet appareil","Remember the key on this device"),
+ cPull:B("Charger depuis JSONBin","Load from JSONBin"), cPush:B("Envoyer vers JSONBin","Send to JSONBin"),
+ cCreate:B("Créer un nouveau bin","Create a new bin"), cForget:B("Oublier la connexion","Forget connection"),
+ cHelp:B("Charger remplace les données de ce navigateur par celles du bin. Préférez une Access Key limitée aux permissions de lecture et de mise à jour des bins plutôt que votre Master Key : la clé est visible par quiconque a accès à ce navigateur.","Loading replaces this browser's data with the bin's data. Prefer an Access Key limited to bin read and update permissions over your Master Key: the key is visible to anyone with access to this browser."),
+ tabNew:B("+ Nouvel immeuble","+ New building"), cmpLink:B("Comparer","Compare"), tabName:B("Nom de l'onglet","Tab name"),
+ dup:B("Dupliquer","Duplicate"), del:B("Supprimer cet onglet","Delete this tab"), delConfirm:B("Cliquez encore pour confirmer","Click again to confirm"),
+ defName:B("Immeuble","Building"), copy:B("copie","copy"),
+ cmpT:B("Comparer les immeubles","Compare buildings"), cmpLead:B("Cochez les onglets à comparer. Le meilleur résultat de chaque ligne est en vert.","Check the tabs to compare. The best result in each row is in green."),
+ cmpEmpty:B("Cochez au moins deux onglets pour les comparer.","Check at least two tabs to compare them."),
+ estBtn:B("Estimer la taxe de bienvenue","Estimate the welcome tax"),
+ addUnit:B("Ajouter un logement","Add a unit"), unitName:B("Logement","Unit"), remove:B("Retirer","Remove"), yes:B("Oui","Yes"), no:B("Non","No")
+};
+const NOTES={
+ fr:[
+  "Droits de mutation 2026 : tranches de base de 0,5 % jusqu'à 62 900 $, 1 % jusqu'à 315 000 $ et 1,5 % au-delà. Les municipalités peuvent fixer des taux plus élevés pour les tranches supérieures à 500 000 $; ajustez le dernier taux selon la ville. Le calcul utilise le plus élevé entre le prix et l'évaluation municipale, sans facteur comparatif.",
+  "Prime SCHL : barème standard (4,00 %, 3,10 %, 2,80 % du prêt selon la mise de fonds) appliqué seulement si vous habitez un des logements et que la mise de fonds est sous 20 %. Le prêteur et la SCHL peuvent exiger une mise de fonds minimale plus élevée selon le nombre de logements; confirmez avec votre courtier.",
+  "Barème Montréal 2026 : 0,5 % jusqu'à 62 900 $, 1 % jusqu'à 315 000 $, 1,5 % jusqu'à 552 300 $, 2 % jusqu'à 1 104 700 $, 2,5 % jusqu'à 2 136 500 $, 3,5 % jusqu'à 3 113 000 $ et 4 % au-delà. Le bouton d'estimation utilise le prix d'achat comme base d'imposition quand vous n'avez pas l'évaluation municipale.",
+  "Paiement hypothécaire : intérêt composé semestriellement, comme les prêts à taux fixe canadiens.",
+  "Impôt : seul le revenu de location est imposé à votre taux marginal. Le remboursement de capital n'est pas déductible, les intérêts le sont. La DPA (amortissement fiscal) ne peut pas créer de perte locative et elle est récupérée (imposée) à la revente. Si vous habitez un logement, les dépenses déductibles sont réparties au prorata du nombre de logements loués, et votre part est traitée comme résidence principale à la revente.",
+  "Gain en capital : taux d'inclusion de 50 % appliqué à la portion locative. Cet outil ne remplace pas l'avis d'un comptable, d'un courtier hypothécaire ou d'un notaire."],
+ en:[
+  "2026 land transfer duties (welcome tax): base brackets of 0.5% up to $62,900, 1% up to $315,000 and 1.5% above. Municipalities can set higher rates for brackets above $500,000; adjust the last rate for your city. The calculation uses the higher of the price and the municipal assessment, without the comparative factor.",
+  "CMHC premium: standard schedule (4.00%, 3.10%, 2.80% of the loan depending on the down payment) applied only if you live in one of the units and the down payment is under 20%. The lender and CMHC may require a higher minimum down payment depending on the number of units; confirm with your broker.",
+  "Montréal 2026 scale: 0.5% up to $62,900, 1% up to $315,000, 1.5% up to $552,300, 2% up to $1,104,700, 2.5% up to $2,136,500, 3.5% up to $3,113,000 and 4% above. The estimate button uses the purchase price as the tax base when you don't have the municipal assessment.",
+  "Mortgage payment: interest compounded semi-annually, like Canadian fixed-rate mortgages.",
+  "Tax: only rental income is taxed, at your marginal rate. Principal repayment isn't deductible; interest is. CCA (capital cost allowance) can't create a rental loss and is recaptured (taxed) on sale. If you live in a unit, deductible expenses are prorated by the number of rented units, and your share is treated as a principal residence on sale.",
+  "Capital gains: 50% inclusion rate applied to the rental portion. This tool doesn't replace advice from an accountant, mortgage broker or notary."]
+};
+const SRC={fr:"Sources :",en:"Sources:"};
+const SRCL=[
+ ["https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/finances/publications-adm/Bulletins/FR/BI_Explication_technique.pdf",B("Finances Québec, bulletin d'avril 2026","Finances Québec, April 2026 bulletin")],
+ ["https://lac-tremblant-nord.qc.ca/wp-content/uploads/2026/04/Reglement-2026-05-Taux-de-droits-de-mutation-2.pdf",B("exemple de règlement municipal 2026 sur les tranches","sample 2026 municipal bylaw on the brackets")],
+ ["https://montreal.ca/articles/comment-sont-calcules-les-droits-sur-les-mutations-immobilieres-9279",B("Ville de Montréal, droits de mutation 2026","City of Montréal, 2026 transfer duties")],
+ ["https://cmhc-schl.gc.ca/professionnels/innovation-et-leadership-dans-le-secteur/expertise-de-lindustrie/la-ressource/assurance-pret-hypothecaire-et-primes",B("SCHL, primes d'assurance prêt hypothécaire","CMHC, mortgage loan insurance premiums")]
+];
+
+const SECTIONS = [
+ {title:B("L'achat","The purchase"), lead:B("Prix et frais ponctuels que vous paierez à la signature.","Price and one-time costs you'll pay at closing."), fields:[
+  {k:"price",label:B("Prix d'achat","Purchase price"),suf:"$",def:600000},
+  {k:"evalMun",label:B("Évaluation municipale","Municipal assessment"),suf:"$",def:560000,hint:B("Sert au calcul de la taxe de bienvenue.","Used to calculate the welcome tax.")},
+  {k:"notary",label:B("Notaire","Notary"),suf:"$",def:2000},
+  {k:"inspection",label:B("Inspection","Inspection"),suf:"$",def:900},
+  {k:"appraisal",label:B("Évaluation demandée par le prêteur","Lender appraisal"),suf:"$",def:400},
+  {k:"reno",label:B("Rénovations au départ","Upfront renovations"),suf:"$",def:0,hint:B("Ajoutées au coût de l'immeuble.","Added to the building's cost.")},
+  {k:"otherClose",label:B("Autres frais d'achat","Other closing costs"),suf:"$",def:0,hint:B("Ajustements de taxes, certificat de localisation, etc.","Tax adjustments, certificate of location, etc.")}
+ ], sub:{title:B("Droits de mutation (taxe de bienvenue) 2026","Land transfer duties (welcome tax) 2026"), fields:[
+  {k:"wtScale",type:"select",label:B("Barème","Rate scale"),opts:[B("Base du Québec 2026 (modifiable)","Québec 2026 base (editable)"),B("Montréal 2026","Montréal 2026")],def:0,hint:B("Le barème de base s'applique dans la plupart des municipalités. Montréal a ses propres tranches.","The base scale applies in most municipalities. Montréal has its own brackets.")},
+  {k:"wt1",label:B("Fin de la tranche à 0,5 %","End of 0.5% bracket"),suf:"$",def:62900},
+  {k:"wt2",label:B("Fin de la tranche à 1 %","End of 1% bracket"),suf:"$",def:315000},
+  {k:"wt3",label:B("Fin de la tranche à 1,5 %","End of 1.5% bracket"),suf:"$",def:500000},
+  {k:"wtRate4",label:B("Taux au-delà","Rate above"),suf:"%",def:1.5,hint:B("Montréal et d'autres villes appliquent des taux plus élevés. Vérifiez auprès de la municipalité.","Montréal and other cities apply higher rates. Check with the municipality.")}
+ ]}},
+ {title:B("Le financement","Financing"), lead:B("Les conditions de votre offre de prêt.","The terms of your mortgage offer."), fields:[
+  {k:"downPct",label:B("Mise de fonds","Down payment"),suf:"%",def:20},
+  {k:"rate",label:B("Taux d'intérêt","Interest rate"),suf:"%",def:4.5,hint:B("Celui de votre offre. Valeur de l'exemple à remplacer.","The one in your offer. Example value, replace it.")},
+  {k:"amort",label:B("Amortissement","Amortization"),suf:B("ans","yrs"),def:25},
+  {k:"premTaxPct",label:B("Taxe de vente sur la prime SCHL","Sales tax on CMHC premium"),suf:"%",def:9,hint:B("Payée comptant chez le notaire, si la prime s'applique.","Paid in cash at the notary, if the premium applies.")}
+ ]},
+ {title:B("Les revenus","Income"), lead:B("Le loyer mensuel de chaque logement. Cochez celui où vous habiterez : il ne compte pas comme revenu, mais son loyer au marché sert à comparer votre coût de logement.","Monthly rent for each unit. Check the one you'll live in: it doesn't count as income, but its market rent is used to compare your housing cost."), units:true, fields:[
+  {k:"otherInc",label:B("Autres revenus par mois","Other income per month"),suf:"$",def:0,hint:B("Stationnement, buanderie, rangement.","Parking, laundry, storage.")},
+  {k:"vacancy",label:B("Inoccupation et loyers impayés","Vacancy and unpaid rent"),suf:"%",def:3}
+ ]},
+ {title:B("Les dépenses d'exploitation","Operating expenses"), lead:B("Montants annuels pour tout l'immeuble.","Annual amounts for the whole building."), fields:[
+  {k:"taxMun",label:B("Taxes municipales","Municipal taxes"),suf:B("$/an","$/yr"),def:5400},
+  {k:"taxSchool",label:B("Taxe scolaire","School tax"),suf:B("$/an","$/yr"),def:600},
+  {k:"insurance",label:B("Assurance de l'immeuble","Building insurance"),suf:B("$/an","$/yr"),def:2800},
+  {k:"energy",label:B("Électricité et chauffage payés par vous","Electricity and heating you pay"),suf:B("$/an","$/yr"),def:1200},
+  {k:"snow",label:B("Déneigement et terrain","Snow removal and landscaping"),suf:B("$/an","$/yr"),def:900},
+  {k:"concierge",label:B("Conciergerie","Janitorial"),suf:B("$/an","$/yr"),def:0},
+  {k:"otherExp",label:B("Autres (comptable, permis, frais bancaires)","Other (accountant, permits, bank fees)"),suf:B("$/an","$/yr"),def:0},
+  {k:"maintPct",label:B("Entretien et réparations courantes","Routine maintenance and repairs"),suf:B("% des loyers","% of rent"),def:5},
+  {k:"mgmtPct",label:B("Gestion","Property management"),suf:B("% des loyers","% of rent"),def:0,hint:B("Mettez 0 si vous gérez vous-même.","Enter 0 if you self-manage.")},
+  {k:"capex",label:B("Réserve pour remplacements majeurs","Reserve for major replacements"),suf:B("$/logement/an","$/unit/yr"),def:600,hint:B("Toiture, fenêtres, chauffe-eau, électroménagers.","Roof, windows, water heater, appliances.")}
+ ]},
+ {title:B("L'impôt","Income tax"), lead:B("Pour calculer ce qui vous reste vraiment.","To calculate what you really keep."), fields:[
+  {k:"mr",label:B("Votre taux marginal d'imposition","Your marginal tax rate"),suf:"%",def:40,hint:B("Fédéral + Québec combinés, selon votre revenu total. Valeur de l'exemple à remplacer par la vôtre.","Federal + Québec combined, based on your total income. Example value, replace with yours.")},
+  {k:"targetPerUnit",label:B("Profit minimal visé par logement loué","Minimum target profit per rented unit"),suf:B("$/mois","$/mo"),def:50,hint:B("Votre propre seuil pour juger qu'un immeuble vaut l'effort.","Your own threshold for a building to be worth the effort.")},
+  {k:"useCCA",type:"check",label:B("Réclamer l'amortissement fiscal (DPA)","Claim capital cost allowance (CCA)"),def:false,hint:B("Réduit l'impôt chaque année, mais il est récupéré à la revente.","Lowers tax each year, but it's recaptured when you sell.")},
+  {k:"bldPct",label:B("Part du prix attribuée au bâtiment","Share of price allocated to the building"),suf:"%",def:70,hint:B("Le terrain ne s'amortit pas.","Land can't be depreciated.")},
+  {k:"ccaRate",label:B("Taux de DPA","CCA rate"),suf:"%",def:4,hint:B("Catégorie 1 pour la plupart des immeubles résidentiels.","Class 1 for most residential buildings.")}
+ ]},
+ {title:B("La projection et la revente","Projection and sale"), lead:B("Hypothèses pour les années suivantes.","Assumptions for the following years."), fields:[
+  {k:"horizon",label:B("Durée de détention","Holding period"),suf:B("ans","yrs"),def:10},
+  {k:"rentGrowth",label:B("Hausse des loyers","Rent increase"),suf:B("%/an","%/yr"),def:3,hint:B("Au Québec, les hausses sont encadrées par le Tribunal administratif du logement.","In Québec, increases are regulated by the Tribunal administratif du logement.")},
+  {k:"expGrowth",label:B("Hausse des dépenses","Expense increase"),suf:B("%/an","%/yr"),def:3},
+  {k:"appreciation",label:B("Hausse de la valeur","Value appreciation"),suf:B("%/an","%/yr"),def:3},
+  {k:"sellPct",label:B("Frais de vente","Selling costs"),suf:B("% du prix","% of price"),def:5,hint:B("Courtier, notaire, pénalité éventuelle.","Broker, notary, possible penalty.")}
+ ]}
+];
+const ALL=SECTIONS.flatMap(s=>s.fields.concat(s.sub?s.sub.fields:[]));
+const defUnits=()=>[1300,1350,1400].map((r,i)=>({label:t(STR.unitName)+" "+(i+1),rent:r,owner:false}));
+const KEY="rentabilite-immeuble-v1", LKEY="rentabilite-immeuble-lang";
+const form=document.getElementById("f");
+let units, vals={};
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function fieldHTML(f){
+  const val= f.k in vals ? vals[f.k] : f.def;
+  if(f.type==="select") return `<div class="field"><label for="f-${f.k}">${t(f.label)}</label><div class="inp"><select id="f-${f.k}" data-k="${f.k}">${f.opts.map((o,j)=>`<option value="${j}" ${+val===j?"selected":""}>${t(o)}</option>`).join("")}</select></div>${f.hint?`<small>${t(f.hint)}</small>`:""}</div>`;
+  if(f.type==="check") return `<div class="check-wrap"><label class="check"><input type="checkbox" data-k="${f.k}" ${val?"checked":""}><span>${t(f.label)}</span></label>${f.hint?`<small>${t(f.hint)}</small>`:""}</div>`;
+  return `<div class="field"><label for="f-${f.k}">${t(f.label)}</label><div class="inp"><input id="f-${f.k}" type="number" inputmode="decimal" step="any" data-k="${f.k}" value="${val}"><span class="suf">${t(f.suf)}</span></div>${f.hint?`<small>${t(f.hint)}</small>`:""}</div>`;
+}
+function buildForm(){
+  const th=t(STR.unitsTh);
+  form.innerHTML=SECTIONS.map(s=>`<section><h2>${t(s.title)}</h2><p class="lead">${t(s.lead)}</p>${s.units?`<table class="units"><thead><tr><th scope="col">${th[0]}</th><th scope="col">${th[1]}</th><th scope="col">${th[2]}</th><th></th></tr></thead><tbody id="unitRows"></tbody></table><button type="button" class="btn" id="addUnit">${t(STR.addUnit)}</button><div style="height:1rem"></div>`:""}<div class="grid">${s.fields.map(fieldHTML).join("")}</div>${s.sub?`<h3>${t(s.sub.title)}</h3><div class="grid">${s.sub.fields.map(fieldHTML).join("")}</div><div class="estimate"><button type="button" class="btn" id="estWT">${t(STR.estBtn)}</button><p id="wtOut"></p></div>`:""}</section>`).join("");
+  renderUnits();
+}
+function renderUnits(){
+  const rows=document.getElementById("unitRows"); if(!rows)return;
+  rows.innerHTML=units.map((u,i)=>`<tr>
+   <td><input type="text" aria-label="${t(STR.unitName)} ${i+1}" data-u="${i}" data-f="label" value="${esc(u.label)}"></td>
+   <td><input type="number" inputmode="decimal" step="any" aria-label="${t(STR.unitsTh)[1]} ${esc(u.label)}" data-u="${i}" data-f="rent" value="${u.rent}"></td>
+   <td class="own"><label class="check"><input type="checkbox" data-u="${i}" data-f="owner" ${u.owner?"checked":""}><span>${t(STR.yes)}</span></label></td>
+   <td><button type="button" class="del" data-del="${i}" aria-label="${t(STR.remove)} ${esc(u.label)}" ${units.length<2?"disabled":""}>×</button></td></tr>`).join("");
+}
+function applyStatic(){
+  document.documentElement.lang= L==="fr"?"fr-CA":"en-CA";
+  document.title= L==="fr"?"Rentaplex | Rentabilité d'un immeuble locatif":"Rentaplex | Rental property profitability";
+  document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(STR[el.dataset.t]);});
+  const lb=document.getElementById("lang"); lb.textContent=t(STR.langBtn); lb.setAttribute("lang",L==="fr"?"en":"fr");
+  const HIST=[
+    ["1.5",B("Sauvegarde JSONBin et archives d'onglets","JSONBin backup and tab archive")],
+    ["1.4",B("Nom Rentaplex et icône","Rentaplex name and icon")],
+    ["1.3",B("Onglets nommés par immeuble et tableau de comparaison","Named tabs per building and comparison table")],
+    ["1.2",B("Bouton d'estimation de la taxe de bienvenue et barème de Montréal 2026","Welcome tax estimate button and Montréal 2026 scale")],
+    ["1.1",B("Version anglaise","English version")],
+    ["1.0",B("Calculateur de rentabilité initial","Initial profitability calculator")]
+  ];
+  document.getElementById("ver").innerHTML=`<summary>Version ${HIST[0][0]}${L==="fr"?", mise à jour le 8 octobre 2026":", updated October 8, 2026"}</summary><ul>`+HIST.map(([n,x])=>`<li><strong>${n}</strong> : ${t(x)}</li>`).join("")+`</ul>`;
+  document.getElementById("notes").innerHTML=NOTES[L].map(n=>`<li>${n}</li>`).join("")+`<li>${SRC[L]} `+SRCL.map(([u,l])=>`<a href="${u}" target="_blank" rel="noopener">${t(l)}</a>`).join(", ")+`.</li>`;
+}
+
+form.addEventListener("click",e=>{
+  if(e.target.id==="estWT"){
+    document.getElementById("f-evalMun").value=document.getElementById("f-price").value;
+    if(document.getElementById("f-wtScale").value==="0"){ [["wt1",62900],["wt2",315000],["wt3",500000],["wtRate4",1.5]].forEach(([k,x])=>{document.getElementById("f-"+k).value=x;}); }
+    update(); return;
+  }
+  if(e.target.id==="addUnit"){units.push({label:t(STR.unitName)+" "+(units.length+1),rent:1200,owner:false});renderUnits();update();return;}
+  const d=e.target.closest("[data-del]"); if(!d||units.length<2)return;
+  units.splice(+d.dataset.del,1); renderUnits(); update();
+});
+form.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.dataset.k){ update(); return; }
+  const i=+el.dataset.u,f=el.dataset.f; if(isNaN(i))return;
+  if(f==="owner"){ units.forEach((u,j)=>u.owner = j===i ? el.checked : (el.checked?false:u.owner)); renderUnits(); }
+  else units[i][f]= f==="rent" ? (parseFloat(el.value)||0) : el.value;
+  update();
+});
+document.getElementById("reset").addEventListener("click",()=>{ vals={}; units=defUnits(); buildForm(); update(); });
+document.getElementById("lang").addEventListener("click",()=>{
+  vals=read(); L= L==="fr"?"en":"fr";
+  try{localStorage.setItem(LKEY,L);}catch(e){}
+  applyStatic(); buildForm(); renderTabs(); update(true); renderCloud();
+});
+
+function read(){const v={};form.querySelectorAll("[data-k]").forEach(el=>{v[el.dataset.k]= el.type==="checkbox"?el.checked:(parseFloat(el.value)||0)});return v;}
+
+const loc=()=>L==="fr"?"fr-CA":"en-CA";
+const money=x=>new Intl.NumberFormat(loc(),{style:"currency",currency:"CAD",maximumFractionDigits:0}).format(Math.round(x)||0);
+const pct=(x,d=1)=>isFinite(x)?(x*100).toLocaleString(loc(),{minimumFractionDigits:d,maximumFractionDigits:d})+(L==="fr"?" %":"%"):"n/a";
+const num=(x,d=2)=>isFinite(x)?x.toLocaleString(loc(),{minimumFractionDigits:d,maximumFractionDigits:d}):"n/a";
+
+function welcomeTax(b,v){
+  const tiers= v.wtScale===1 ? [[0,62900,.005],[62900,315000,.01],[315000,552300,.015],[552300,1104700,.02],[1104700,2136500,.025],[2136500,3113000,.035],[3113000,Infinity,.04]]
+    : [[0,v.wt1,.005],[v.wt1,v.wt2,.01],[v.wt2,v.wt3,.015],[v.wt3,Infinity,v.wtRate4/100]];
+  let x=0; for(const [lo,hi,r] of tiers){ if(b>lo) x+=(Math.min(b,hi)-lo)*r; } return x;
+}
+function irr(cfs){
+  const npv=r=>cfs.reduce((s,c,k)=>s+c/Math.pow(1+r,k),0);
+  let lo=-.99,hi=1.5,flo=npv(lo),fhi=npv(hi);
+  if(!isFinite(flo)||!isFinite(fhi)||flo*fhi>0) return null;
+  for(let k=0;k<200;k++){const m=(lo+hi)/2,fm=npv(m); if(flo*fm<=0){hi=m;}else{lo=m;flo=fm;}}
+  return (lo+hi)/2;
+}
+
+function compute(v,U){
+  U=U||units;
+  const W=[];
+  const P=v.price, d=v.downPct/100, H=Math.max(1,Math.min(40,Math.round(v.horizon)||1));
+  const nUnits=U.length, owner=U.find(u=>u.owner), oo=!!owner;
+  const rented=U.filter(u=>!u.owner), nRented=rented.length;
+  const f = nUnits? nRented/nUnits : 1;
+  const down=P*d, base=P-down;
+  let premRate=0;
+  if(d<.2){
+    if(!oo) W.push(B("Sans habiter l'immeuble, les prêteurs exigent généralement au moins 20 % de mise de fonds. Ce scénario risque de ne pas être finançable.","If you don't live in the building, lenders generally require at least 20% down. This scenario may not be financeable."));
+    else if(P>=1500000) W.push(B("Au-delà de 1,5 M$, l'assurance prêt n'est pas offerte : une mise de fonds de 20 % est requise.","Above $1.5M, mortgage insurance isn't available: 20% down is required."));
+    else { const ltv=1-d; premRate= ltv>.9?.04: ltv>.85?.031:.028; }
+    if(d<.05) W.push(B("Une mise de fonds sous 5 % n'est pas admissible.","A down payment under 5% isn't eligible."));
+  }
+  const premium=base*premRate, loan=base+premium, premTax=premium*v.premTaxPct/100;
+  const wtBase=Math.max(P,v.evalMun), wt=welcomeTax(wtBase,v);
+  const cashNeeded=down+wt+v.notary+v.inspection+v.appraisal+premTax+v.reno+v.otherClose;
+  const costBasis=P+wt+v.notary+v.inspection+v.appraisal+v.reno+v.otherClose;
+  const i=Math.pow(1+v.rate/200,1/6)-1, n=Math.max(1,v.amort*12);
+  const pmt= i>0 ? loan*i/(1-Math.pow(1+i,-n)) : loan/n;
+  const gr=v.rentGrowth/100, ge=v.expGrowth/100, ga=v.appreciation/100;
+  const rentRented=rented.reduce((s,u)=>s+u.rent,0)*12, rentAll=U.reduce((s,u)=>s+u.rent,0)*12;
+  const fixedExp=v.taxMun+v.taxSchool+v.insurance+v.energy+v.snow+v.concierge+v.otherExp;
+  let bal=loan, ucc=(P*v.bldPct/100+v.reno)*f, ccaTotal=0;
+  const years=[];
+  for(let y=0;y<H;y++){
+    const g=Math.pow(1+gr,y), e=Math.pow(1+ge,y);
+    const gpr=(rentRented+v.otherInc*12)*g, vac=gpr*v.vacancy/100, egi=gpr-vac;
+    const gprAll=(rentAll+v.otherInc*12)*g;
+    const maint=gprAll*(1-v.vacancy/100)*v.maintPct/100, mgmt=egi*v.mgmtPct/100;
+    const capex=v.capex*nUnits*e, fixed=fixedExp*e;
+    const opex=fixed+maint+mgmt+capex, noi=egi-opex;
+    let intY=0,prY=0;
+    for(let m=0;m<12;m++){ if(bal<=0.005)break; const it=bal*i, pr=Math.min(pmt-it,bal); intY+=it; prY+=pr; bal-=pr; }
+    const ds=intY+prY, rentalNoi=egi-opex*f, intDed=intY*f;
+    let cca=0;
+    if(v.useCCA){ cca=Math.min(ucc*v.ccaRate/100*(y===0?.5:1), Math.max(0,rentalNoi-intDed)); ucc-=cca; ccaTotal+=cca; }
+    const taxable=rentalNoi-intDed-cca, tax=taxable*v.mr/100;
+    const cfPre=noi-ds, cfAfter=cfPre-tax, value=P*Math.pow(1+ga,y+1);
+    const noiAll=gprAll*(1-v.vacancy/100)-(fixed+maint+gprAll*(1-v.vacancy/100)*v.mgmtPct/100+capex);
+    years.push({y:y+1,gpr,gprAll,egi,opex,fixed,maint,mgmt,capex,noi,noiAll,intY,prY,ds,cca,taxable,tax,cfPre,cfAfter,bal:Math.max(0,bal),value,equity:value-Math.max(0,bal)});
+  }
+  const last=years[H-1], S=last.value, sellCosts=S*v.sellPct/100;
+  const gain=S-sellCosts-costBasis, capTax=Math.max(0,gain)*f*.5*v.mr/100;
+  const recap=Math.min(ccaTotal, Math.max(0,S-sellCosts))*v.mr/100;
+  const netSale=S-sellCosts-last.bal-capTax-recap;
+  const flows=[-cashNeeded].concat(years.map(r=>r.cfAfter)); flows[H]+=netSale;
+  const cumCF=years.reduce((s,r)=>s+r.cfAfter,0);
+  return {v,W,P,d,down,loan,premium,premTax,wt,wtBase,cashNeeded,pmt,years,y1:years[0],H,oo,owner,nRented,
+    S,capTax,recap,netSale,tri:irr(flows),cumCF,profitTotal:cumCF+netSale-cashNeeded};
+}
+
+function summary(r){
+  const {v,y1}=r, m=y1.cfAfter/12, fr=L==="fr";
+  const dscr=y1.ds>0?y1.noi/y1.ds:Infinity, cap=y1.noiAll/r.P, mrb=r.P/y1.gprAll, coc=y1.cfAfter/r.cashNeeded;
+  const breakEven=(y1.opex+y1.ds)/(y1.gpr||1), target=v.targetPerUnit*r.nRented;
+  const totalRet=(y1.cfAfter+y1.prY+(y1.value-r.P))/r.cashNeeded;
+  let s,title,sub;
+  if(!r.oo){
+    if(m>=target && dscr>=1.2){s="good";title=fr?"Rentable":"Profitable";sub=fr?"Les loyers couvrent tout et il vous reste un profit au-dessus de votre seuil.":"Rents cover everything and you keep a profit above your target.";}
+    else if(m>=0){s="warn";title=fr?"Rentable de justesse":"Barely profitable";sub= m<target?(fr?"Le profit est positif mais sous votre seuil visé. Peu de marge en cas d'imprévu.":"Profit is positive but below your target. Little room for surprises."):(fr?"Profit positif, mais la couverture de la dette est mince.":"Positive profit, but debt coverage is thin.");}
+    else{s="bad";title=fr?"Pas rentable":"Not profitable";sub=fr?"Vous devrez ajouter de l'argent chaque mois pour garder l'immeuble.":"You'd have to put in money every month to keep the building.";}
+  } else {
+    const mkt=r.owner.rent;
+    if(m>=0){s="good";title=fr?"Rentable, et vous êtes logé":"Profitable, and you live for free";sub=fr?"Les locataires paient toutes les dépenses, y compris votre logement.":"Tenants pay all expenses, including your own unit.";}
+    else if(-m<=mkt){s="good";title=fr?"Avantageux":"Worth it";sub=fr?`Vous habitez sur place pour ${money(-m)} par mois, moins que le loyer du marché de votre logement (${money(mkt)}).`:`You live on site for ${money(-m)} a month, less than your unit's market rent (${money(mkt)}).`;}
+    else if(-m<=mkt*1.25){s="warn";title=fr?"À surveiller":"Watch out";sub=fr?`Vous loger vous coûterait ${money(-m)} par mois, un peu plus que le loyer du marché (${money(mkt)}).`:`Living there would cost you ${money(-m)} a month, a bit more than market rent (${money(mkt)}).`;}
+    else{s="bad";title=fr?"Pas rentable":"Not profitable";sub=fr?`Vous loger vous coûterait ${money(-m)} par mois, bien plus que le loyer du marché (${money(mkt)}).`:`Living there would cost you ${money(-m)} a month, well above market rent (${money(mkt)}).`;}
+  }
+  return {m,dscr,cap,mrb,coc,breakEven,target,totalRet,s,title,sub};
+}
+function render(r){
+  const {v,y1}=r, fr=L==="fr";
+  const {m,dscr,cap,mrb,coc,breakEven,target,totalRet,s,title,sub}=summary(r);
+  document.getElementById("verdict").dataset.s=s;
+  document.getElementById("vTitle").textContent=title;
+  document.getElementById("vSub").textContent=sub;
+  document.getElementById("vMonth").textContent=(m>0?"+":"")+money(m);
+  document.getElementById("vMonthL").textContent = r.oo&&m<0 ? (fr?"ce que vous payez par mois pour y habiter, après revenus de location et impôt (année 1)":"what you pay per month to live there, after rental income and tax (year 1)") : (fr?"net par mois après hypothèque, dépenses et impôt (année 1)":"net per month after mortgage, expenses and tax (year 1)");
+  document.getElementById("vYear").textContent=money(y1.cfAfter);
+  document.getElementById("vCash").textContent=money(r.cashNeeded);
+  document.getElementById("vCoc").textContent=pct(coc);
+  const wo=document.getElementById("wtOut"); if(wo) wo.textContent= fr?`Taxe de bienvenue : ${money(r.wt)}, soit un taux moyen de ${pct(r.wt/(r.wtBase||1),2)} sur ${money(r.wtBase)}.`:`Welcome tax: ${money(r.wt)}, an average rate of ${pct(r.wt/(r.wtBase||1),2)} on ${money(r.wtBase)}.`;
+  ["wt1","wt2","wt3","wtRate4"].forEach(k=>{const el=document.getElementById("f-"+k); if(el) el.disabled=v.wtScale===1;});
+  document.getElementById("warns").innerHTML=r.W.map(w=>`<p>${t(w)}</p>`).join("");
+  document.getElementById("mbar").dataset.s=s;
+  document.getElementById("mbarT").textContent=title;
+  document.getElementById("mbarV").textContent=(m>0?"+":"")+money(m)+(fr?" / mois":" / mo");
+
+  const checks=[
+    [m>=0,fr?"Il reste de l'argent chaque mois après tout payer":"Money left over every month after paying everything"],
+    r.oo ? [m>=0||-m<=r.owner.rent,fr?"Vous loger coûte moins que le loyer du marché":"Living there costs less than market rent"] : [m>=target,fr?`Profit d'au moins ${money(target)} par mois (votre seuil)`:`Profit of at least ${money(target)} per month (your target)`],
+    [dscr>=1.2,fr?`Couverture de la dette de ${num(dscr)} (1,20 ou plus est un seuil de prudence courant)`:`Debt coverage of ${num(dscr)} (1.20 or more is a common prudence threshold)`],
+    [cap>v.rate/100,fr?`Taux de capitalisation (${pct(cap,2)}) plus élevé que le taux hypothécaire`:`Cap rate (${pct(cap,2)}) higher than the mortgage rate`],
+    [breakEven<=.9,fr?`Point mort à ${pct(breakEven,0)} d'occupation (90 % ou moins laisse de la marge)`:`Break-even at ${pct(breakEven,0)} occupancy (90% or less leaves room)`]
+  ];
+  document.getElementById("checks").innerHTML=checks.map(([ok,x])=>`<li><span class="${ok?"ok":"no"}" aria-label="${ok?t(STR.yes):t(STR.no)}">${ok?"✓":"✕"}</span><span>${x}</span></li>`).join("");
+
+  const mo=x=>x/12;
+  const parts=[
+    [fr?"Dépenses d'exploitation":"Operating expenses",mo(y1.opex),"var(--muted)"],
+    [fr?"Intérêts":"Interest",mo(y1.intY),"var(--bad)"],
+    [fr?"Capital remboursé (votre épargne)":"Principal repaid (your savings)",mo(y1.prY),"var(--steel)"],
+    [y1.tax>=0?(fr?"Impôt":"Tax"):(fr?"Économie d'impôt":"Tax savings"),mo(y1.tax),"var(--warn)"],
+    [m>=0?(fr?"Profit net":"Net profit"):(fr?"Manque à combler":"Shortfall"),m,m>=0?"var(--good)":"var(--bad)"]
+  ];
+  const tot=parts.reduce((a,p)=>a+Math.max(0,p[1]),0)||1;
+  document.getElementById("bar").innerHTML=parts.filter(p=>p[1]>0).map(p=>`<span style="width:${p[1]/tot*100}%;background:${p[2]}" title="${p[0]}"></span>`).join("");
+  document.getElementById("legend").innerHTML=`<span></span><span>${fr?"Loyers encaissés":"Rent collected"}</span><b>${money(mo(y1.egi))}</b>`+parts.map(p=>`<span class="sw" style="background:${p[2]}"></span><span>${p[0]}</span><b>${money(Math.abs(p[1]))}</b>`).join("");
+
+  const kv=(rows,el)=>{document.getElementById(el).innerHTML=rows.map(([a,b,c])=>`<dt${c?' class="sum"':""}>${a}</dt><dd${c?' class="sum"':""}>${b}</dd>`).join("");};
+  kv([
+    [fr?"Taux de capitalisation (TGA)":"Cap rate",pct(cap,2)],
+    [fr?"Multiplicateur du revenu brut (MRB)":"Gross rent multiplier (GRM)",num(mrb,1)],
+    [fr?"Ratio de couverture de la dette":"Debt service coverage ratio (DSCR)",num(dscr)],
+    [fr?"Point mort d'occupation":"Break-even occupancy",pct(breakEven,0)],
+    [fr?"Rendement sur mise de fonds (cash-on-cash)":"Cash-on-cash return",pct(coc)],
+    [fr?"Rendement total an 1 (profit + capital + plus-value)":"Total return year 1 (profit + principal + appreciation)",pct(totalRet)],
+    [fr?`TRI sur ${r.H} ans, après impôt et revente`:`IRR over ${r.H} years, after tax and sale`, r.tri===null?"n/a":pct(r.tri)]
+  ],"ratios");
+  kv([
+    [fr?"Revenus bruts potentiels":"Gross potential rent",money(y1.gpr)],
+    [fr?"Inoccupation":"Vacancy",money(y1.egi-y1.gpr)],
+    [fr?"Revenus effectifs":"Effective income",money(y1.egi),1],
+    [fr?"Taxes, assurance, énergie, terrain":"Taxes, insurance, energy, grounds",money(-y1.fixed)],
+    [fr?"Entretien et réparations":"Maintenance and repairs",money(-y1.maint)],
+    [fr?"Gestion":"Management",money(-y1.mgmt)],
+    [fr?"Réserve remplacements":"Replacement reserve",money(-y1.capex)],
+    [fr?"Revenu net d'exploitation (RNE)":"Net operating income (NOI)",money(y1.noi),1],
+    [fr?`Hypothèque (${money(r.pmt)}/mois)`:`Mortgage (${money(r.pmt)}/mo)`,money(-y1.ds)],
+    [fr?"Flux avant impôt":"Cash flow before tax",money(y1.cfPre),1],
+    [fr?"dont capital remboursé":"of which principal repaid",money(y1.prY)],
+    [y1.tax>=0?(fr?"Impôt sur le revenu locatif":"Tax on rental income"):(fr?"Économie d'impôt (perte déductible)":"Tax savings (deductible loss)"),money(-y1.tax)],
+    ...(v.useCCA?[[fr?"DPA réclamée":"CCA claimed",money(y1.cca)]]:[]),
+    [fr?"Net après impôt":"Net after tax",money(y1.cfAfter),1]
+  ],"detail");
+  kv([
+    [fr?"Mise de fonds":"Down payment",money(r.down)],
+    [fr?`Taxe de bienvenue (base ${money(r.wtBase)})`:`Welcome tax (based on ${money(r.wtBase)})`,money(r.wt)],
+    [fr?"Notaire, inspection, évaluation":"Notary, inspection, appraisal",money(v.notary+v.inspection+v.appraisal)],
+    ...(r.premium>0?[[fr?`Taxe sur prime SCHL (prime de ${money(r.premium)} ajoutée au prêt)`:`Tax on CMHC premium (${money(r.premium)} premium added to loan)`,money(r.premTax)]]:[]),
+    [fr?"Rénovations et autres frais":"Renovations and other costs",money(v.reno+v.otherClose)],
+    [fr?"Total à prévoir":"Total to plan for",money(r.cashNeeded),1],
+    [fr?"Montant du prêt":"Loan amount",money(r.loan)]
+  ],"cashList");
+
+  const td=(x,c)=>`<td class="${c?(x<0?"neg":"pos"):""}">${money(x)}</td>`;
+  const heads=fr?["Année","Revenus effectifs","Dépenses","RNE","Hypothèque","Impôt","Net après impôt","Net par mois","Solde du prêt","Valeur estimée","Avoir net"]:["Year","Effective income","Expenses","NOI","Mortgage","Tax","Net after tax","Net per month","Loan balance","Estimated value","Equity"];
+  document.getElementById("proj").innerHTML=`<thead><tr>${heads.map(h=>`<th scope="col">${h}</th>`).join("")}</tr></thead><tbody>`+
+    r.years.map(y=>`<tr><td>${y.y}</td>${td(y.egi)}${td(-y.opex)}${td(y.noi)}${td(-y.ds)}${td(-y.tax)}${td(y.cfAfter,1)}${td(y.cfAfter/12,1)}${td(y.bal)}${td(y.value)}${td(y.equity)}</tr>`).join("")+`</tbody>`;
+  document.getElementById("sale").innerHTML=[
+    [fr?`Prix de vente estimé après ${r.H} ans`:`Estimated sale price after ${r.H} years`,money(r.S)],
+    [fr?"Impôt à la revente (gain en capital + récupération DPA)":"Tax on sale (capital gains + CCA recapture)",money(r.capTax+r.recap)],
+    [fr?"Ce qui vous reste à la vente (après prêt, frais, impôt)":"What you keep on sale (after loan, costs, tax)",money(r.netSale)],
+    [fr?`Profits mensuels cumulés sur ${r.H} ans`:`Cumulative cash flow over ${r.H} years`,money(r.cumCF)],
+    [fr?"Enrichissement total, mise de fonds déduite":"Total wealth gain, net of cash invested",money(r.profitTotal)]
+  ].map(([a,b])=>`<div>${a}<strong>${b}</strong></div>`).join("");
+}
+
+const KEY2="rentabilite-immeuble-v2", VER="1.5";
+let scenarios=[], active=null, cmpSel=null, delArmed=null, archDelArmed=null, savedAt=0;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const defVals=()=>Object.fromEntries(ALL.map(f=>[f.k, f.type==="check"?!!f.def:f.def]));
+function newScenario(name,src){
+  return {id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name, archived:false,
+    vals: src?clone(src.vals):defVals(), units: src?clone(src.units):defUnits()};
+}
+const visible=()=>scenarios.filter(x=>!x.archived);
+const archivedList=()=>scenarios.filter(x=>x.archived);
+const cur=()=>scenarios.find(x=>x.id===active);
+function syncCur(){ const sc=cur(); if(sc && form.querySelector("[data-k]")){ sc.vals=read(); sc.units=units; } }
+function setActive(sc){ active=sc.id; vals=sc.vals; units=sc.units; }
+function switchTo(id){ syncCur(); setActive(scenarios.find(x=>x.id===id)); buildForm(); renderTabs(); update(); }
+function renderTabs(){
+  const vis=visible();
+  document.getElementById("tabs").innerHTML=vis.map(sc=>`<button type="button" class="tab" role="tab" data-tab="${sc.id}" aria-selected="${sc.id===active}">${esc(sc.name||"—")}</button>`).join("");
+  const n=document.getElementById("tabName"); if(document.activeElement!==n) n.value=cur().name;
+  const d=document.getElementById("tabDel"); d.disabled=vis.length<2;
+  d.textContent= delArmed===active ? t(STR.delConfirm) : t(STR.del);
+  document.getElementById("tabArch").disabled=vis.length<2;
+  renderArchive();
+}
+function renderArchive(){
+  const a=archivedList();
+  document.getElementById("archSum").textContent=`${t(STR.archT)} (${a.length})`;
+  document.getElementById("archList").innerHTML= a.length ? a.map(sc=>`<div class="arow"><span>${esc(sc.name||"—")}</span><button type="button" class="btn" data-restore="${sc.id}">${t(STR.restore)}</button><button type="button" class="btn danger" data-purge="${sc.id}">${archDelArmed===sc.id?t(STR.delConfirm):t(STR.purge)}</button></div>`).join("") : `<small>${t(STR.archEmpty)}</small>`;
+}
+document.getElementById("tabs").addEventListener("click",e=>{ const b=e.target.closest("[data-tab]"); if(b && b.dataset.tab!==active){ delArmed=null; switchTo(b.dataset.tab);} });
+document.getElementById("tabs").addEventListener("keydown",e=>{
+  if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;
+  const vis=visible(), i=vis.findIndex(x=>x.id===active), j=(i+(e.key==="ArrowRight"?1:-1)+vis.length)%vis.length;
+  switchTo(vis[j].id); document.querySelector(`[data-tab="${vis[j].id}"]`).focus();
+});
+document.getElementById("tabAdd").addEventListener("click",()=>{
+  syncCur(); const sc=newScenario(t(STR.defName)+" "+(scenarios.length+1));
+  scenarios.push(sc); cmpSel.push(sc.id); switchTo(sc.id);
+  const n=document.getElementById("tabName"); n.focus(); n.select();
+});
+document.getElementById("tabDup").addEventListener("click",()=>{
+  syncCur(); const src=cur(), sc=newScenario(src.name+" ("+t(STR.copy)+")",src);
+  scenarios.splice(scenarios.indexOf(src)+1,0,sc); cmpSel.push(sc.id); switchTo(sc.id);
+});
+function leaveCurrent(removeIt){
+  const vis=visible(), i=vis.findIndex(x=>x.id===active), sc=cur();
+  if(removeIt){ scenarios.splice(scenarios.indexOf(sc),1); cmpSel=cmpSel.filter(id=>id!==sc.id); } else sc.archived=true;
+  const rest=visible(); setActive(rest[Math.max(0,Math.min(i-1,rest.length-1))]);
+  buildForm(); renderTabs(); update();
+}
+document.getElementById("tabDel").addEventListener("click",()=>{
+  if(visible().length<2)return;
+  if(delArmed!==active){ delArmed=active; renderTabs(); setTimeout(()=>{ if(delArmed){ delArmed=null; renderTabs(); } },4000); return; }
+  delArmed=null; leaveCurrent(true);
+});
+document.getElementById("tabArch").addEventListener("click",()=>{
+  if(visible().length<2)return; syncCur(); delArmed=null; leaveCurrent(false);
+  document.getElementById("archBox").open=true;
+});
+document.getElementById("archList").addEventListener("click",e=>{
+  const r=e.target.closest("[data-restore]"), p=e.target.closest("[data-purge]");
+  if(r){ scenarios.find(x=>x.id===r.dataset.restore).archived=false; archDelArmed=null; renderTabs(); update(); }
+  if(p){
+    const id=p.dataset.purge;
+    if(archDelArmed!==id){ archDelArmed=id; renderArchive(); setTimeout(()=>{ if(archDelArmed===id){ archDelArmed=null; renderArchive(); } },4000); return; }
+    archDelArmed=null; scenarios=scenarios.filter(x=>x.id!==id); cmpSel=cmpSel.filter(x=>x!==id); renderTabs(); update();
+  }
+});
+document.getElementById("tabName").addEventListener("input",e=>{ cur().name=e.target.value; renderTabs(); renderCompare(); save(true); });
+document.getElementById("cmpPick").addEventListener("change",e=>{
+  const id=e.target.dataset.cmp; if(!id)return;
+  cmpSel= e.target.checked ? cmpSel.concat(id) : cmpSel.filter(x=>x!==id);
+  renderCompare(); save(true);
+});
+document.getElementById("cmpOut").addEventListener("click",e=>{
+  const b=e.target.closest("[data-open]"); if(!b)return;
+  switchTo(b.dataset.open); window.scrollTo({top:0,behavior:"smooth"});
+});
+
+function renderCompare(){
+  const fr=L==="fr", vis=visible();
+  document.getElementById("cmpPick").innerHTML=vis.map(sc=>`<label class="check"><input type="checkbox" data-cmp="${sc.id}" ${cmpSel.includes(sc.id)?"checked":""}><span>${esc(sc.name||"—")}</span></label>`).join("");
+  const out=document.getElementById("cmpOut");
+  const sel=vis.filter(sc=>cmpSel.includes(sc.id));
+  if(sel.length<2){ out.innerHTML=`<p class="lead">${t(STR.cmpEmpty)}</p>`; return; }
+  const res=sel.map(sc=>{ const r=compute(Object.assign(defVals(),sc.vals),sc.units); return {sc,r,S:summary(r)}; });
+  const rows=[
+    [fr?"Prix d'achat":"Purchase price",x=>x.r.P,money,"low"],
+    [fr?"Nombre de logements":"Number of units",x=>x.sc.units.length,v=>v,null],
+    [fr?"Liquidités requises":"Cash needed",x=>x.r.cashNeeded,money,"low"],
+    [fr?"Taxe de bienvenue":"Welcome tax",x=>x.r.wt,money,"low"],
+    [fr?"Net par mois (année 1)":"Net per month (year 1)",x=>x.S.m,money,"high"],
+    [fr?"Net par année (année 1)":"Net per year (year 1)",x=>x.r.y1.cfAfter,money,"high"],
+    [fr?"Taux de capitalisation":"Cap rate",x=>x.S.cap,v=>pct(v,2),"high"],
+    [fr?"Multiplicateur du revenu brut":"Gross rent multiplier",x=>x.S.mrb,v=>num(v,1),"low"],
+    [fr?"Couverture de la dette":"Debt coverage (DSCR)",x=>x.S.dscr,v=>num(v),"high"],
+    [fr?"Point mort d'occupation":"Break-even occupancy",x=>x.S.breakEven,v=>pct(v,0),"low"],
+    [fr?"Rendement sur mise de fonds":"Cash-on-cash return",x=>x.S.coc,v=>pct(v),"high"],
+    [fr?"Rendement total année 1":"Total return year 1",x=>x.S.totalRet,v=>pct(v),"high"],
+    [fr?"TRI après impôt et revente":"IRR after tax and sale",x=>x.r.tri,v=>v==null?"n/a":pct(v),"high"],
+    [fr?"Durée de détention":"Holding period",x=>x.r.H,v=>v+(fr?" ans":" yrs"),null],
+    [fr?"Enrichissement total à la revente":"Total wealth gain on sale",x=>x.r.profitTotal,money,"high"]
+  ];
+  const head=`<thead><tr><th scope="col"></th>${res.map(x=>`<th scope="col"><button type="button" class="linkbtn" data-open="${x.sc.id}">${esc(x.sc.name||"—")}</button></th>`).join("")}</tr></thead>`;
+  const verdictRow=`<tr><th scope="row" style="text-align:left;font-weight:500">Verdict</th>${res.map(x=>`<td><span class="pill" data-s="${x.S.s}">${x.S.title}</span></td>`).join("")}</tr>`;
+  const body=rows.map(([lab,get,f,better])=>{
+    const vs=res.map(get); const fin=vs.filter(v=>v!=null&&isFinite(v));
+    let best=null;
+    if(better && fin.length>1 && Math.max(...fin)!==Math.min(...fin)) best= better==="high"?Math.max(...fin):Math.min(...fin);
+    return `<tr><th scope="row" style="text-align:left;font-weight:500">${lab}</th>${vs.map(v=>{const isB=best!==null&&v===best; return `<td class="${isB?"best":""}">${isB?"★ ":""}${f(v)}</td>`;}).join("")}</tr>`;
+  }).join("");
+  out.innerHTML=`<div class="scroll"><table class="proj cmp">${head}<tbody>${verdictRow}${body}</tbody></table></div>`;
+}
+
+/* ---------- JSONBin ---------- */
+const CKEY="rentaplex-jsonbin", API="https://api.jsonbin.io/v3/b";
+let cloud={binId:"",keyType:"access",key:"",remember:false,auto:true}, cloudState="off", pushTimer=null, cloudMsg=null;
+function loadCloud(){ try{ const o=JSON.parse(localStorage.getItem(CKEY)||"null"); if(o) cloud=Object.assign(cloud,o); }catch(e){} }
+function saveCloud(){ try{ localStorage.setItem(CKEY,JSON.stringify(Object.assign({},cloud,{key:cloud.remember?cloud.key:""}))); }catch(e){} }
+const connected=()=>!!(cloud.binId&&cloud.key);
+function cHeaders(extra){ return Object.assign({"Content-Type":"application/json",[cloud.keyType==="master"?"X-Master-Key":"X-Access-Key"]:cloud.key},extra||{}); }
+function status(msg,kind){ cloudMsg={msg,kind}; cloudState= kind==="err"?"err":(connected()?"on":"off"); renderCloudStatus(); }
+function renderCloudStatus(){
+  const el=document.getElementById("cStatus");
+  el.textContent= cloudMsg ? t(cloudMsg.msg) : (connected()?B("Prêt.","Ready.")[L]:B("Non connecté. Entrez l'ID du bin et une clé, ou créez un bin.","Not connected. Enter the bin ID and a key, or create a bin.")[L]);
+  el.className= cloudMsg&&cloudMsg.kind ? cloudMsg.kind : "";
+  document.getElementById("cDot").className="dot"+(cloudState==="err"?" err":(connected()?" on":""));
+}
+function renderCloud(){
+  document.getElementById("cBin").value=cloud.binId; document.getElementById("cType").value=cloud.keyType;
+  document.getElementById("cKey").value=cloud.key; document.getElementById("cAuto").checked=cloud.auto;
+  document.getElementById("cRemember").checked=cloud.remember; renderCloudStatus();
+}
+async function apiErr(res){ let m=""; try{ const j=await res.json(); m=j.message||""; }catch(e){} return `${res.status} ${m}`.trim(); }
+const NET=B("Impossible de joindre JSONBin. La version publiée dans Claude bloque les connexions externes : utilisez la version GitHub Pages.","Can't reach JSONBin. The version published in Claude blocks external connections: use the GitHub Pages version.");
+const hhmm=()=>new Date().toLocaleTimeString(L==="fr"?"fr-CA":"en-CA",{hour:"2-digit",minute:"2-digit"});
+function payload(){ return {app:"rentaplex",version:VER,savedAt,scenarios,active,cmp:cmpSel}; }
+async function push(){
+  clearTimeout(pushTimer); pushTimer=null;
+  if(!connected()){ status(B("Entrez l'ID du bin et une clé.","Enter the bin ID and a key."),"err"); return; }
+  syncCur(); status(B("Envoi en cours…","Sending…"));
+  try{
+    const res=await fetch(`${API}/${encodeURIComponent(cloud.binId)}`,{method:"PUT",headers:cHeaders(),body:JSON.stringify(payload())});
+    if(!res.ok){ const m=await apiErr(res); status(B("Erreur à l'envoi : "+m,"Send error: "+m),"err"); return; }
+    status(B("Envoyé à "+hhmm()+".","Sent at "+hhmm()+"."),"ok");
+  }catch(e){ status(NET,"err"); }
+}
+function schedulePush(){ if(connected()&&cloud.auto){ clearTimeout(pushTimer); pushTimer=setTimeout(push,2500); } }
+function applyData(o){
+  scenarios=o.scenarios; active=o.active; cmpSel=o.cmp; savedAt=o.savedAt||0; normalize();
+  buildForm(); renderTabs(); update(true);
+}
+async function pull(onlyIfNewer){
+  if(!connected()){ status(B("Entrez l'ID du bin et une clé.","Enter the bin ID and a key."),"err"); return; }
+  status(B("Chargement…","Loading…"));
+  try{
+    const res=await fetch(`${API}/${encodeURIComponent(cloud.binId)}/latest?meta=false`,{headers:cHeaders()});
+    if(!res.ok){ const m=await apiErr(res); status(B("Erreur au chargement : "+m,"Load error: "+m),"err"); return; }
+    const o=await res.json();
+    if(!o||o.app!=="rentaplex"||!Array.isArray(o.scenarios)||!o.scenarios.length){
+      if(onlyIfNewer){ await push(); return; }
+      status(B("Ce bin ne contient pas encore de données Rentaplex. Cliquez sur « Envoyer vers JSONBin ».","This bin has no Rentaplex data yet. Click Send to JSONBin."),"err"); return;
+    }
+    if(onlyIfNewer && (o.savedAt||0)<savedAt){ await push(); return; }
+    applyData(o); status(B("Chargé à "+hhmm()+".","Loaded at "+hhmm()+"."),"ok");
+  }catch(e){ status(NET,"err"); }
+}
+async function createBin(){
+  if(!cloud.key){ status(B("Entrez d'abord votre clé.","Enter your key first."),"err"); return; }
+  syncCur(); status(B("Création du bin…","Creating bin…"));
+  try{
+    const res=await fetch(API,{method:"POST",headers:cHeaders({"X-Bin-Name":"Rentaplex","X-Bin-Private":"true"}),body:JSON.stringify(payload())});
+    if(!res.ok){ const m=await apiErr(res); status(B("Erreur à la création : "+m,"Create error: "+m),"err"); return; }
+    const j=await res.json(); cloud.binId=(j.metadata&&j.metadata.id)||""; saveCloud(); renderCloud();
+    status(B("Bin créé et données envoyées.","Bin created and data sent."),"ok");
+  }catch(e){ status(NET,"err"); }
+}
+const cIn=(id,k,fn)=>document.getElementById(id).addEventListener("input",e=>{ cloud[k]=fn(e.target); saveCloud(); cloudMsg=null; renderCloudStatus(); });
+cIn("cBin","binId",x=>x.value.trim()); cIn("cKey","key",x=>x.value.trim()); cIn("cType","keyType",x=>x.value);
+cIn("cAuto","auto",x=>x.checked); cIn("cRemember","remember",x=>x.checked);
+document.getElementById("cPull").addEventListener("click",()=>pull(false));
+document.getElementById("cPush").addEventListener("click",push);
+document.getElementById("cCreate").addEventListener("click",createBin);
+document.getElementById("cForget").addEventListener("click",()=>{ cloud={binId:"",keyType:"access",key:"",remember:false,auto:true}; try{localStorage.removeItem(CKEY);}catch(e){} cloudMsg=null; renderCloud(); });
+
+/* ---------- Stockage local ---------- */
+function normalize(){
+  if(!Array.isArray(scenarios)||!scenarios.length) scenarios=[newScenario(t(STR.defName)+" 1")];
+  scenarios.forEach(x=>{ x.archived=!!x.archived; if(!x.vals) x.vals=defVals(); if(!Array.isArray(x.units)||!x.units.length) x.units=defUnits(); });
+  if(!visible().length) scenarios[0].archived=false;
+  if(!cur()||cur().archived) active=visible()[0].id;
+  if(!Array.isArray(cmpSel)) cmpSel=scenarios.map(x=>x.id);
+  cmpSel=cmpSel.filter(id=>scenarios.some(x=>x.id===id));
+  setActive(cur());
+}
+function save(dirty){
+  if(dirty){ savedAt=Date.now(); schedulePush(); }
+  try{ localStorage.setItem(KEY2,JSON.stringify({savedAt,scenarios,active,cmp:cmpSel})); }catch(e){}
+}
+function load(){
+  try{ const l=localStorage.getItem(LKEY); if(l==="en"||l==="fr") L=l; }catch(e){}
+  try{
+    const raw2=localStorage.getItem(KEY2);
+    if(raw2){ const o=JSON.parse(raw2); if(o&&Array.isArray(o.scenarios)){ scenarios=o.scenarios; active=o.active; cmpSel=o.cmp; savedAt=o.savedAt||0; } }
+    else { const raw=localStorage.getItem(KEY); if(raw){ const o=JSON.parse(raw); const sc=newScenario(t(STR.defName)+" 1"); if(o&&o.v) sc.vals=Object.assign(defVals(),o.v); if(o&&Array.isArray(o.units)&&o.units.length) sc.units=o.units; scenarios=[sc]; } }
+  }catch(e){}
+  normalize(); loadCloud();
+}
+function update(clean){ syncCur(); render(compute(read())); renderCompare(); save(!clean); }
+load(); applyStatic(); buildForm(); renderTabs(); update(true); renderCloud();
+if(connected()&&cloud.auto) pull(true);
+})();
+</script>
+</body>
+</html>
